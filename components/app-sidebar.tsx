@@ -29,68 +29,70 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-
-const mainNavItems = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home,
-  },
-  {
-    title: "Freelancing",
-    url: "/dashboard/freelancing",
-    icon: Briefcase,
-    badge: "12",
-  },
-  {
-    title: "Events",
-    url: "/dashboard/events",
-    icon: Calendar,
-    badge: "3",
-  },
-  {
-    title: "Community",
-    url: "/dashboard/community",
-    icon: MessageCircle,
-    badge: "5",
-  },
-  {
-    title: "Network",
-    url: "/dashboard/network",
-    icon: Users,
-  },
-]
-
-const quickActions = [
-  {
-    title: "Analytics",
-    url: "/dashboard/analytics",
-    icon: TrendingUp,
-  },
-  {
-    title: "Earnings",
-    url: "/dashboard/earnings",
-    icon: DollarSign,
-  },
-  {
-    title: "Reviews",
-    url: "/dashboard/reviews",
-    icon: Star,
-  },
-  {
-    title: "Notifications",
-    url: "/dashboard/notifications",
-    icon: Bell,
-  },
-  {
-    title: "Settings",
-    url: "/dashboard/settings",
-    icon: Settings,
-  },
-]
+import { useUser } from "@/lib/user-context"
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const { user, isClient, isFreelancer, isStartup } = useUser()
+
+  const mainNavItems = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: isClient || isStartup ? "Projects" : "Find Work",
+      url: "/dashboard/freelancing",
+      icon: Briefcase,
+      badge: isClient || isStartup ? "3" : "12",
+    },
+    {
+      title: "Events",
+      url: "/dashboard/events",
+      icon: Calendar,
+      badge: "3",
+    },
+    {
+      title: "Community",
+      url: "/dashboard/community",
+      icon: MessageCircle,
+      badge: "5",
+    },
+    {
+      title: "Network",
+      url: "/dashboard/network",
+      icon: Users,
+    },
+  ]
+
+  const quickActions = [
+    {
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: TrendingUp,
+    },
+    {
+      title: "Earnings",
+      url: "/dashboard/earnings",
+      icon: DollarSign,
+    },
+    {
+      title: "Reviews",
+      url: "/dashboard/reviews",
+      icon: Star,
+    },
+    {
+      title: "Notifications",
+      url: "/dashboard/notifications",
+      icon: Bell,
+    },
+    {
+      title: "Settings",
+      url: "/dashboard/settings",
+      icon: Settings,
+    },
+  ]
 
   return (
     <Sidebar className="border-r">
@@ -151,12 +153,22 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <div className="flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src="/placeholder.svg?height=32&width=32" />
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarImage src={user?.avatar || "/placeholder.svg?height=32&width=32"} />
+            <AvatarFallback>
+              {user?.name
+                ?.split(" ")
+                .map((n) => n[0])
+                .join("") || "U"}
+            </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">John Doe</p>
-            <p className="text-xs text-muted-foreground truncate">john@example.com</p>
+            <p className="text-sm font-medium truncate">{user?.name || "User"}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground truncate">{user?.company || user?.email}</p>
+              <Badge variant="secondary" className="text-xs">
+                {user?.role}
+              </Badge>
+            </div>
           </div>
         </div>
       </SidebarFooter>

@@ -1,7 +1,9 @@
 import type React from "react"
-import { SidebarProvider } from "@/components/ui/sidebar"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
+import { UserProvider } from "@/lib/user-context"
+import { ChatProvider } from "@/lib/chat-context"
 
 export default function DashboardLayout({
   children,
@@ -9,14 +11,16 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col">
-          <DashboardHeader />
-          <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-900">{children}</main>
-        </div>
-      </div>
-    </SidebarProvider>
+    <UserProvider>
+      <ChatProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <DashboardHeader />
+            <main className="flex-1 p-6">{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
+      </ChatProvider>
+    </UserProvider>
   )
 }

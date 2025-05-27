@@ -25,7 +25,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" className="text-lg px-8" asChild>
-              <Link href="/dashboard">
+              <Link href="/auth">
                 Get Started Free <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -167,7 +167,7 @@ export default function LandingPage() {
             Join thousands of developers, startups, and communities already using TechCollab
           </p>
           <Button size="lg" variant="secondary" className="text-lg px-8" asChild>
-            <Link href="/dashboard">
+            <Link href="/auth">
               Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

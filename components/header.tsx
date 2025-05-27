@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Moon, Sun, Menu } from 'lucide-react'
+import { Moon, Sun, Menu } from "lucide-react"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -59,7 +59,7 @@ export function Header() {
               <Link href="/login">Sign In</Link>
             </Button>
             <Button asChild>
-              <Link href="/dashboard">Get Started</Link>
+              <Link href="/auth">Get Started</Link>
             </Button>
           </div>
 
@@ -90,7 +90,7 @@ export function Header() {
                 <Link href="/login">Sign In</Link>
               </Button>
               <Button asChild>
-                <Link href="/dashboard">Get Started</Link>
+                <Link href="/auth">Get Started</Link>
               </Button>
             </div>
           </nav>
