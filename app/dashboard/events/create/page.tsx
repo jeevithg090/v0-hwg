@@ -16,8 +16,18 @@ import { ArrowLeft, Plus, X, Calendar, MapPin, Users, DollarSign, Video, Upload,
 import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { RequireHost } from "@/components/auth-guard"
+import { toast } from "sonner"
 
 export default function CreateEventPage() {
+  return (
+    <RequireHost fallback="/dashboard/events">
+      <CreateEventForm />
+    </RequireHost>
+  )
+}
+
+function CreateEventForm() {
   const router = useRouter()
   const [speakers, setSpeakers] = useState<string[]>([])
   const [newSpeaker, setNewSpeaker] = useState("")
@@ -85,28 +95,29 @@ export default function CreateEventPage() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false)
+      toast.success("Event created")
       router.push("/dashboard/events?tab=hosting")
-    }, 2000)
+    }, 800)
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button variant="ghost" size="icon" asChild aria-label="Go back">
           <Link href="/dashboard/events">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Create New Event</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Create New Event</h1>
           <p className="text-muted-foreground">Organize your next tech event and build community</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -125,7 +136,7 @@ export default function CreateEventPage() {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="eventType">Event Type *</Label>
                     <Select value={formData.eventType} onValueChange={(value) => handleInputChange("eventType", value)}>
@@ -186,12 +197,12 @@ export default function CreateEventPage() {
                       onChange={(e) => setNewTag(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
                     />
-                    <Button type="button" onClick={addTag} size="icon">
+                    <Button type="button" onClick={addTag} size="icon" aria-label="Add">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {tags.map((tag) => (
                         <Badge key={tag} variant="secondary" className="gap-1">
                           {tag}
@@ -201,6 +212,7 @@ export default function CreateEventPage() {
                             size="icon"
                             className="h-4 w-4 p-0 hover:bg-transparent"
                             onClick={() => removeTag(tag)}
+                            aria-label={`Remove ${tag}`}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -219,7 +231,7 @@ export default function CreateEventPage() {
                 <CardDescription>Set when your event will take place</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="startDate">Start Date *</Label>
                     <Input
@@ -242,7 +254,7 @@ export default function CreateEventPage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="endDate">End Date *</Label>
                     <Input
@@ -303,7 +315,7 @@ export default function CreateEventPage() {
                   <div className="space-y-2">
                     <Label htmlFor="onlineLink">Meeting Link *</Label>
                     <div className="relative">
-                      <Video className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Video className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                       <Input
                         id="onlineLink"
                         placeholder="https://zoom.us/j/123456789 or https://meet.google.com/abc-def-ghi"
@@ -329,7 +341,7 @@ export default function CreateEventPage() {
                     <div className="space-y-2">
                       <Label htmlFor="address">Address *</Label>
                       <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                         <Input
                           id="address"
                           placeholder="123 Tech Street, San Francisco, CA 94105"
@@ -363,11 +375,11 @@ export default function CreateEventPage() {
 
                 {formData.registrationRequired && (
                   <>
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="maxAttendees">Maximum Attendees</Label>
                         <div className="relative">
-                          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                           <Input
                             id="maxAttendees"
                             type="number"
@@ -400,11 +412,11 @@ export default function CreateEventPage() {
                       </div>
 
                       {formData.isPaid && (
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid gap-4 md:grid-cols-2">
                           <div className="space-y-2">
                             <Label htmlFor="ticketPrice">Ticket Price *</Label>
                             <div className="relative">
-                              <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                               <Input
                                 id="ticketPrice"
                                 type="number"
@@ -466,12 +478,12 @@ export default function CreateEventPage() {
                       onChange={(e) => setNewSpeaker(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSpeaker())}
                     />
-                    <Button type="button" onClick={addSpeaker} size="icon">
+                    <Button type="button" onClick={addSpeaker} size="icon" aria-label="Add">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   {speakers.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {speakers.map((speaker) => (
                         <Badge key={speaker} variant="outline" className="gap-1">
                           {speaker}
@@ -481,6 +493,7 @@ export default function CreateEventPage() {
                             size="icon"
                             className="h-4 w-4 p-0 hover:bg-transparent"
                             onClick={() => removeSpeaker(speaker)}
+                            aria-label={`Remove ${speaker}`}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -550,7 +563,7 @@ export default function CreateEventPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <Eye className="h-5 w-5" />
                   Event Preview
                 </CardTitle>
@@ -558,8 +571,8 @@ export default function CreateEventPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{formData.title || "Event Title"}</h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <h3 className="text-lg font-semibold">{formData.title || "Event Title"}</h3>
+                  <div className="mt-1 flex items-center gap-2">
                     {formData.eventType && (
                       <Badge variant="secondary">
                         {formData.eventType === "hackathon" && "🏆 Hackathon"}
@@ -575,7 +588,7 @@ export default function CreateEventPage() {
                       <Badge variant="outline">{formData.ticketPrice ? `$${formData.ticketPrice}` : "Paid"}</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     {formData.description
                       ? formData.description.substring(0, 150) + "..."
                       : "Event description will appear here..."}
@@ -613,7 +626,7 @@ export default function CreateEventPage() {
                   <>
                     <Separator />
                     <div>
-                      <p className="text-sm font-medium mb-2">Tags:</p>
+                      <p className="mb-2 text-sm font-medium">Tags:</p>
                       <div className="flex flex-wrap gap-1">
                         {tags.map((tag) => (
                           <Badge key={tag} variant="secondary" className="text-xs">
@@ -629,7 +642,7 @@ export default function CreateEventPage() {
                   <>
                     <Separator />
                     <div>
-                      <p className="text-sm font-medium mb-2">Speakers:</p>
+                      <p className="mb-2 text-sm font-medium">Speakers:</p>
                       <div className="space-y-1">
                         {speakers.map((speaker) => (
                           <p key={speaker} className="text-sm text-muted-foreground">
@@ -649,13 +662,13 @@ export default function CreateEventPage() {
                 <CardDescription>Upload a cover image for your event</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Upload event cover image</p>
+                <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+                  <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-muted-foreground">Upload event cover image</p>
                   <Button variant="outline" size="sm">
                     Choose Image
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-2">Recommended: 1200x630px, JPG or PNG</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Recommended: 1200x630px, JPG or PNG</p>
                 </div>
               </CardContent>
             </Card>
@@ -666,19 +679,19 @@ export default function CreateEventPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-green-500"></div>
                   <p>Write a compelling description</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
                   <p>Set clear expectations and agenda</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-purple-500"></div>
                   <p>Include relevant tags for discovery</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-orange-500"></div>
                   <p>Test your online links beforehand</p>
                 </div>
               </CardContent>
@@ -687,7 +700,7 @@ export default function CreateEventPage() {
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex justify-end space-x-4 pt-6 border-t">
+        <div className="flex justify-end space-x-4 border-t pt-6">
           <Button type="button" variant="outline" asChild>
             <Link href="/dashboard/events">Cancel</Link>
           </Button>

@@ -31,14 +31,17 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useUser } from "@/lib/user-context"
-import { EventRegistrationModal } from "@/components/event-registration-modal"
+import { useTabParam } from "@/hooks/use-tab-param"
+
+const EVENT_TABS = ["discover", "registered", "hosting", "analytics", "saved", "calendar"] as const
+import { EventRegistrationModal, type RegistrableEvent } from "@/components/event-registration-modal"
 import { useState } from "react"
 
 export default function EventsPage() {
-  const [selectedEvent, setSelectedEvent] = useState<any>(null)
+  const [selectedEvent, setSelectedEvent] = useState<RegistrableEvent | null>(null)
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
 
-  const handleRegisterClick = (event: any) => {
+  const handleRegisterClick = (event: RegistrableEvent) => {
     setSelectedEvent(event)
     setIsRegistrationModalOpen(true)
   }
@@ -242,13 +245,14 @@ export default function EventsPage() {
     return <Badge variant={badge.variant}>{badge.label}</Badge>
   }
 
-  const { user, isClient, isFreelancer, isStartup } = useUser()
+  const { isClient, isFreelancer, isStartup } = useUser()
+  const [tab, setTab] = useTabParam("discover", EVENT_TABS)
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{isFreelancer ? "Discover Events" : "Events Hub"}</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">{isFreelancer ? "Discover Events" : "Events Hub"}</h1>
           <p className="text-muted-foreground">
             {isFreelancer
               ? "Find and join amazing tech events to grow your network"
@@ -265,8 +269,8 @@ export default function EventsPage() {
         )}
       </div>
 
-      <Tabs defaultValue="discover" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start sm:grid sm:grid-cols-4">
           <TabsTrigger value="discover">{isFreelancer ? "Browse Events" : "Discover Events"}</TabsTrigger>
           <TabsTrigger value="registered">{isFreelancer ? "My Events" : "My Registrations"}</TabsTrigger>
           {(isClient || isStartup) && <TabsTrigger value="hosting">Hosting</TabsTrigger>}
@@ -279,9 +283,9 @@ export default function EventsPage() {
           {/* Search and Filters */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col gap-4 md:flex-row">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                   <Input placeholder="Search events..." className="pl-10" />
                 </div>
                 <Select>
@@ -332,22 +336,22 @@ export default function EventsPage() {
 
           {/* Featured Events */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Featured Events</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <h2 className="mb-4 text-xl font-semibold">Featured Events</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {featuredEvents.map((event) => (
-                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-48 bg-gradient-to-r from-blue-500 to-purple-600 relative">
-                    <div className="absolute top-4 left-4">
+                <Card key={event.id} className="overflow-hidden transition-shadow hover:shadow-lg">
+                  <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
+                    <div className="absolute left-4 top-4">
                       <Badge className="bg-white text-black">Featured</Badge>
                     </div>
-                    <div className="absolute top-4 right-4">
-                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                    <div className="absolute right-4 top-4">
+                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" aria-label="Save">
                         <Bookmark className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="space-y-2">
                         {getEventTypeBadge(event.type)}
                         <CardTitle className="text-lg">{event.title}</CardTitle>
@@ -376,7 +380,7 @@ export default function EventsPage() {
                         </span>
                       </div>
 
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="mt-2 flex flex-wrap gap-1">
                         {event.tags.map((tag) => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag}
@@ -388,7 +392,7 @@ export default function EventsPage() {
                         <Button className="flex-1" onClick={() => handleRegisterClick(event)}>
                           {event.price === "Free" ? "Register Free" : `Register ${event.price}`}
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" aria-label="Share">
                           <Share className="h-4 w-4" />
                         </Button>
                       </div>
@@ -401,22 +405,22 @@ export default function EventsPage() {
 
           {/* Upcoming Events */}
           <div>
-            <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
+            <h2 className="mb-4 text-xl font-semibold">Upcoming Events</h2>
             <div className="space-y-4">
               {upcomingEvents.map((event) => (
-                <Card key={event.id} className="hover:shadow-md transition-shadow">
+                <Card key={event.id} className="transition-shadow hover:shadow-md">
                   <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center space-x-4">
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-green-400 to-blue-500">
                           {getEventTypeIcon(event.type)}
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-semibold">{event.title}</h3>
                             {getEventTypeBadge(event.type)}
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-4 w-4" />
                               <span>{event.startDate}</span>
@@ -435,7 +439,7 @@ export default function EventsPage() {
                             </div>
                           </div>
                           <p className="text-sm text-muted-foreground">{event.description}</p>
-                          <div className="flex flex-wrap gap-1 mt-2">
+                          <div className="mt-2 flex flex-wrap gap-1">
                             {event.tags.map((tag) => (
                               <Badge key={tag} variant="outline" className="text-xs">
                                 {tag}
@@ -465,13 +469,13 @@ export default function EventsPage() {
             {registeredEvents.map((event) => (
               <Card key={event.id}>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-r from-purple-400 to-pink-500">
                         {getEventTypeIcon(event.type)}
                       </div>
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold">{event.title}</h3>
                           {getEventTypeBadge(event.type)}
                         </div>
@@ -485,7 +489,7 @@ export default function EventsPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm">
-                        <ExternalLink className="h-4 w-4 mr-2" />
+                        <ExternalLink className="mr-2 h-4 w-4" />
                         Event Details
                       </Button>
                       <Button variant="outline" size="sm">
@@ -505,14 +509,14 @@ export default function EventsPage() {
               {myEvents.map((event) => (
                 <Card key={event.id}>
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <CardTitle>{event.title}</CardTitle>
                         <CardDescription>
                           {event.startDate} • {event.registered}/{event.maxAttendees} registered
                         </CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge
                           variant={event.status === "upcoming" ? "default" : "secondary"}
                           className={event.status === "upcoming" ? "bg-green-100 text-green-800" : ""}
@@ -532,7 +536,7 @@ export default function EventsPage() {
                       </div>
                       <Progress value={(event.registered / event.maxAttendees) * 100} className="h-2" />
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="text-sm text-muted-foreground">
                           Revenue:{" "}
                           <span className="font-medium text-foreground">${event.revenue.toLocaleString()}</span>
@@ -540,12 +544,12 @@ export default function EventsPage() {
                         <div className="flex gap-2">
                           <Button variant="outline" size="sm" asChild>
                             <Link href={`/dashboard/events/manage/${event.id}`}>
-                              <Settings className="h-4 w-4 mr-2" />
+                              <Settings className="mr-2 h-4 w-4" />
                               Manage
                             </Link>
                           </Button>
                           <Button variant="outline" size="sm">
-                            <BarChart3 className="h-4 w-4 mr-2" />
+                            <BarChart3 className="mr-2 h-4 w-4" />
                             Analytics
                           </Button>
                           <Button size="sm">View Event</Button>
@@ -561,7 +565,7 @@ export default function EventsPage() {
 
         {(isClient || isStartup) && (
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Events Hosted</CardTitle>
@@ -613,14 +617,14 @@ export default function EventsPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle>Event Performance</CardTitle>
                   <CardDescription>Registration trends over time</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                  <div className="flex h-64 items-center justify-center text-muted-foreground">
                     Event performance chart would go here
                   </div>
                 </CardContent>
@@ -634,28 +638,28 @@ export default function EventsPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className="mb-1 flex justify-between text-sm">
                         <span>Workshops</span>
                         <span>40%</span>
                       </div>
                       <Progress value={40} className="h-2" />
                     </div>
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className="mb-1 flex justify-between text-sm">
                         <span>Webinars</span>
                         <span>30%</span>
                       </div>
                       <Progress value={30} className="h-2" />
                     </div>
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className="mb-1 flex justify-between text-sm">
                         <span>Hackathons</span>
                         <span>20%</span>
                       </div>
                       <Progress value={20} className="h-2" />
                     </div>
                     <div>
-                      <div className="flex justify-between text-sm mb-1">
+                      <div className="mb-1 flex justify-between text-sm">
                         <span>Conferences</span>
                         <span>10%</span>
                       </div>
@@ -671,10 +675,10 @@ export default function EventsPage() {
         {isFreelancer && (
           <>
             <TabsContent value="saved" className="space-y-6">
-              <div className="text-center py-12">
-                <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Saved Events</h3>
-                <p className="text-muted-foreground mb-4">Save events you're interested in to view them later</p>
+              <div className="py-12 text-center">
+                <Bookmark className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <h3 className="mb-2 text-lg font-semibold">No Saved Events</h3>
+                <p className="mb-4 text-muted-foreground">Save events you're interested in to view them later</p>
                 <Button variant="outline">Browse Events</Button>
               </div>
             </TabsContent>
@@ -686,9 +690,9 @@ export default function EventsPage() {
                   <CardDescription>Your upcoming registered events</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Upcoming Events</h3>
+                  <div className="py-8 text-center">
+                    <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                    <h3 className="mb-2 text-lg font-semibold">No Upcoming Events</h3>
                     <p className="text-muted-foreground">Register for events to see them in your calendar</p>
                   </div>
                 </CardContent>

@@ -1,98 +1,93 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-import { Moon, Sun, Menu } from "lucide-react"
-import { useTheme } from "next-themes"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { Menu, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { BrandMark } from "@/components/brand"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { useUser } from "@/lib/user-context"
+
+const navLinks = [
+  { href: "/#features", label: "Features" },
+  { href: "/#roles", label: "Who It's For" },
+  { href: "/dashboard/freelancing", label: "Freelancing" },
+  { href: "/dashboard/events", label: "Events" },
+]
 
 export function Header() {
-  const { theme, setTheme } = useTheme()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const { user } = useUser()
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const toggleTheme = () => {
-    if (mounted) {
-      setTheme(theme === "dark" ? "light" : "dark")
-    }
-  }
+  const authButtons = user ? (
+    <Button asChild>
+      <Link href="/dashboard">Go to Dashboard</Link>
+    </Button>
+  ) : (
+    <>
+      <Button variant="ghost" asChild>
+        <Link href="/auth/signin">Sign In</Link>
+      </Button>
+      <Button asChild>
+        <Link href="/auth">Get Started</Link>
+      </Button>
+    </>
+  )
 
   return (
-    <header className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">TC</span>
-          </div>
-          <span className="font-bold text-xl">TechCollab</span>
-        </Link>
+    <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:px-3 focus:py-2"
+      >
+        Skip to content
+      </a>
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <BrandMark size="sm" href="/" />
 
-        <nav className="hidden md:flex items-center space-x-8">
-          <Link href="/freelancing" className="text-muted-foreground hover:text-foreground transition-colors">
-            Freelancing
-          </Link>
-          <Link href="/events" className="text-muted-foreground hover:text-foreground transition-colors">
-            Events
-          </Link>
-          <Link href="/community" className="text-muted-foreground hover:text-foreground transition-colors">
-            Community
-          </Link>
-          <Link href="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-            Pricing
-          </Link>
+        <nav aria-label="Main" className="hidden items-center space-x-8 md:flex">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
-          {mounted && (
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            </Button>
-          )}
-
-          <div className="hidden md:flex items-center space-x-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Sign In</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/auth">Get Started</Link>
-            </Button>
-          </div>
-
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <Menu className="h-5 w-5" />
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <ThemeToggle />
+          <div className="hidden items-center space-x-2 md:flex">{authButtons}</div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setIsMenuOpen((open) => !open)}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-menu"
+          >
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="md:hidden border-t bg-white dark:bg-gray-900 p-4">
-          <nav className="flex flex-col space-y-4">
-            <Link href="/freelancing" className="text-muted-foreground hover:text-foreground">
-              Freelancing
-            </Link>
-            <Link href="/events" className="text-muted-foreground hover:text-foreground">
-              Events
-            </Link>
-            <Link href="/community" className="text-muted-foreground hover:text-foreground">
-              Community
-            </Link>
-            <Link href="/pricing" className="text-muted-foreground hover:text-foreground">
-              Pricing
-            </Link>
-            <div className="flex flex-col space-y-2 pt-4 border-t">
-              <Button variant="ghost" asChild>
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/auth">Get Started</Link>
-              </Button>
-            </div>
+        <div id="mobile-menu" className="border-t bg-white p-4 dark:bg-gray-900 md:hidden">
+          <nav aria-label="Mobile" className="flex flex-col space-y-4">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="flex flex-col space-y-2 border-t pt-4">{authButtons}</div>
           </nav>
         </div>
       )}

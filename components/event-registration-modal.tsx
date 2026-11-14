@@ -1,5 +1,7 @@
 "use client"
 
+import { toast } from "sonner"
+
 import type React from "react"
 
 import { useState } from "react"
@@ -13,21 +15,23 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, MapPin, Clock, Users, CheckCircle } from "lucide-react"
 
+export interface RegistrableEvent {
+  id: number
+  title: string
+  type: string
+  startDate: string
+  time: string
+  location: string
+  isOnline: boolean
+  price: string
+  maxAttendees: number
+  registered: number
+}
+
 interface EventRegistrationModalProps {
   isOpen: boolean
   onClose: () => void
-  event: {
-    id: number
-    title: string
-    type: string
-    startDate: string
-    time: string
-    location: string
-    isOnline: boolean
-    price: string
-    maxAttendees: number
-    registered: number
-  }
+  event: RegistrableEvent
 }
 
 export function EventRegistrationModal({ isOpen, onClose, event }: EventRegistrationModalProps) {
@@ -52,7 +56,7 @@ export function EventRegistrationModal({ isOpen, onClose, event }: EventRegistra
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
+      toast.error("Please agree to the terms and conditions")
       return
     }
 
@@ -62,20 +66,20 @@ export function EventRegistrationModal({ isOpen, onClose, event }: EventRegistra
     setTimeout(() => {
       setIsLoading(false)
       setIsRegistered(true)
-    }, 2000)
+    }, 800)
   }
 
   if (isRegistered) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-md">
-          <div className="text-center py-6">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Registration Successful!</h3>
-            <p className="text-muted-foreground mb-4">
+          <div className="py-6 text-center">
+            <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-500" />
+            <h3 className="mb-2 text-xl font-semibold">Registration Successful!</h3>
+            <p className="mb-4 text-muted-foreground">
               You're all set for <strong>{event.title}</strong>
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="mb-6 text-sm text-muted-foreground">
               We've sent a confirmation email with event details and calendar invite.
             </p>
             <div className="flex gap-2">
@@ -92,7 +96,7 @@ export function EventRegistrationModal({ isOpen, onClose, event }: EventRegistra
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Register for Event</DialogTitle>
           <DialogDescription>Fill out the form below to secure your spot</DialogDescription>
@@ -100,9 +104,9 @@ export function EventRegistrationModal({ isOpen, onClose, event }: EventRegistra
 
         <div className="space-y-6">
           {/* Event Summary */}
-          <div className="bg-muted/50 rounded-lg p-4">
-            <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
-            <div className="flex items-center gap-2 mb-2">
+          <div className="rounded-lg bg-muted/50 p-4">
+            <h3 className="mb-2 text-lg font-semibold">{event.title}</h3>
+            <div className="mb-2 flex items-center gap-2">
               <Badge variant="secondary">{event.type}</Badge>
               {event.price !== "Free" && <Badge variant="outline">{event.price}</Badge>}
             </div>

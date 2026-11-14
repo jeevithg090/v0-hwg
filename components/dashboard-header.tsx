@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { Bell, Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -11,100 +13,126 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Search, Bell, Plus, Moon, Sun } from 'lucide-react'
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { canHostContent, getInitials } from "@/lib/auth"
+import { useUser } from "@/lib/user-context"
+
+// Demo notifications until a notifications service exists.
+const notifications = [
+  { title: "New gig proposal received", time: "2 minutes ago", href: "/dashboard/freelancing" },
+  { title: "Event reminder: React Meetup", time: "1 hour ago", href: "/dashboard/events" },
+  { title: "New message in #general", time: "3 hours ago", href: "/dashboard/community" },
+]
 
 export function DashboardHeader() {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const toggleTheme = () => {
-    if (mounted) {
-      setTheme(theme === "dark" ? "light" : "dark")
-    }
-  }
+  const { user, logout } = useUser()
+  const isHost = canHostContent(user?.role)
 
   return (
-    <header className="border-b bg-white dark:bg-gray-900 px-6 py-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+    <header className="sticky top-0 z-20 border-b bg-white px-4 py-3 dark:bg-gray-900 sm:px-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-4">
           <SidebarTrigger />
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search projects, events, people..." className="pl-10 w-64" />
+          <div className="relative hidden md:block">
+            <Search
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              type="search"
+              aria-label="Search projects, events, people"
+              placeholder="Search projects, events, people..."
+              className="w-64 pl-10"
+            />
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <Button size="sm" className="gap-2">
-            <Plus className="h-4 w-4" />
-            Create
-          </Button>
+        <div className="flex items-center gap-1 sm:gap-3">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Create</span>
+                <span className="sr-only sm:hidden">Create</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {isHost ? (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/freelancing/create-gig">New project</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/events/create">New event</Link>
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/freelancing/profile">Update profile</Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard/community">New group</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          {mounted && (
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            </Button>
-          )}
+          <ThemeToggle />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-4 w-4" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                  3
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                aria-label={`Notifications (${notifications.length} unread)`}
+              >
+                <Bell className="h-4 w-4" aria-hidden="true" />
+                <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center p-0 text-xs">
+                  {notifications.length}
                 </Badge>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 max-w-[calc(100vw-2rem)]">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">New gig proposal received</p>
-                  <p className="text-xs text-muted-foreground">2 minutes ago</p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Event reminder: React Meetup</p>
-                  <p className="text-xs text-muted-foreground">1 hour ago</p>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">New message in #general</p>
-                  <p className="text-xs text-muted-foreground">3 hours ago</p>
-                </div>
-              </DropdownMenuItem>
+              {notifications.map((n) => (
+                <DropdownMenuItem key={n.title} asChild>
+                  <Link href={n.href} className="flex flex-col items-start space-y-1">
+                    <span className="text-sm font-medium">{n.title}</span>
+                    <span className="text-xs text-muted-foreground">{n.time}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full" aria-label="Account menu">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuLabel className="font-normal">
+                <p className="text-sm font-medium">{user?.name}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Billing</DropdownMenuItem>
+              {user?.role === "freelancer" && (
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/freelancing/profile">Profile</Link>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Log out</DropdownMenuItem>
+              <DropdownMenuItem onSelect={logout}>Log out</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

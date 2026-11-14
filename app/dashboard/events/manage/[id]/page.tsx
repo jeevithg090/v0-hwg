@@ -26,14 +26,26 @@ import {
   Upload,
 } from "lucide-react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
+import { RequireHost } from "@/components/auth-guard"
 import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-export default function ManageEventPage({ params }: { params: { id: string } }) {
+export default function ManageEventPage() {
+  return (
+    <RequireHost fallback="/dashboard/events">
+      <ManageEvent />
+    </RequireHost>
+  )
+}
+
+function ManageEvent() {
+  const params = useParams<{ id: string }>()
   const [selectedAttendees, setSelectedAttendees] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [activeTab, setActiveTab] = useState("attendees")
 
   // Mock event data
   const event = {
@@ -179,40 +191,38 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button variant="ghost" size="icon" asChild aria-label="Go back">
           <Link href="/dashboard/events">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{event.title}</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">{event.title}</h1>
           <p className="text-muted-foreground">Event Management Dashboard</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/dashboard/events/edit/${event.id}`}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Event
-            </Link>
+          <Button variant="outline" onClick={() => setActiveTab("settings")}>
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Event
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" aria-label="More options">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className="mr-2 h-4 w-4" />
                 Export Attendees
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="mr-2 h-4 w-4" />
                 Send Announcement
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Calendar className="h-4 w-4 mr-2" />
+                <Calendar className="mr-2 h-4 w-4" />
                 Duplicate Event
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -221,7 +231,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
       </div>
 
       {/* Event Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Registered</CardTitle>
@@ -268,8 +278,8 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
         </Card>
       </div>
 
-      <Tabs defaultValue="attendees" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start sm:grid sm:grid-cols-5">
           <TabsTrigger value="attendees">Attendees</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="communications">Communications</TabsTrigger>
@@ -281,32 +291,32 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
           {/* Attendee Management Tools */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle>Attendee Management</CardTitle>
                 <div className="flex gap-2">
                   {selectedAttendees.length > 0 && (
                     <>
                       <Button variant="outline" size="sm">
-                        <Mail className="h-4 w-4 mr-2" />
+                        <Mail className="mr-2 h-4 w-4" />
                         Email Selected ({selectedAttendees.length})
                       </Button>
                       <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
+                        <Download className="mr-2 h-4 w-4" />
                         Export Selected
                       </Button>
                     </>
                   )}
                   <Button size="sm">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Download className="mr-2 h-4 w-4" />
                     Export All
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                   <Input
                     placeholder="Search attendees..."
                     value={searchTerm}
@@ -331,8 +341,8 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                 </Button>
               </div>
 
-              <div className="border rounded-lg">
-                <div className="p-4 border-b bg-muted/50">
+              <div className="rounded-lg border">
+                <div className="border-b bg-muted/50 p-4">
                   <div className="flex items-center space-x-4">
                     <input
                       type="checkbox"
@@ -363,8 +373,8 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                               .join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
                             <div>
                               <p className="font-medium">{attendee.name}</p>
                               <p className="text-sm text-muted-foreground">{attendee.email}</p>
@@ -377,32 +387,32 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                               {getPaymentBadge(attendee.paymentStatus)}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
+                                  <Button variant="ghost" size="icon" aria-label="More options">
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem>
-                                    <Mail className="h-4 w-4 mr-2" />
+                                    <Mail className="mr-2 h-4 w-4" />
                                     Send Email
                                   </DropdownMenuItem>
                                   <DropdownMenuItem>
-                                    <UserCheck className="h-4 w-4 mr-2" />
+                                    <UserCheck className="mr-2 h-4 w-4" />
                                     Check In
                                   </DropdownMenuItem>
                                   <DropdownMenuItem>
-                                    <Edit className="h-4 w-4 mr-2" />
+                                    <Edit className="mr-2 h-4 w-4" />
                                     Edit Details
                                   </DropdownMenuItem>
                                   <DropdownMenuItem className="text-red-600">
-                                    <UserX className="h-4 w-4 mr-2" />
+                                    <UserX className="mr-2 h-4 w-4" />
                                     Cancel Registration
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                          <div className="mt-2 flex items-center space-x-4 text-xs text-muted-foreground">
                             <span>Registered: {attendee.registrationDate}</span>
                             <span>Ticket: {attendee.ticketType}</span>
                             <span>Phone: {attendee.phone}</span>
@@ -418,14 +428,14 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Registration Timeline</CardTitle>
                 <CardDescription>Daily registration count over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="flex h-64 items-center justify-center text-muted-foreground">
                   Registration chart would go here
                 </div>
               </CardContent>
@@ -439,28 +449,28 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="mb-1 flex justify-between text-sm">
                       <span>Software Engineers</span>
                       <span>45%</span>
                     </div>
                     <Progress value={45} className="h-2" />
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="mb-1 flex justify-between text-sm">
                       <span>Product Managers</span>
                       <span>25%</span>
                     </div>
                     <Progress value={25} className="h-2" />
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="mb-1 flex justify-between text-sm">
                       <span>Designers</span>
                       <span>20%</span>
                     </div>
                     <Progress value={20} className="h-2" />
                   </div>
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="mb-1 flex justify-between text-sm">
                       <span>Students</span>
                       <span>10%</span>
                     </div>
@@ -550,10 +560,10 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Message</label>
-                <textarea className="w-full p-3 border rounded-md" rows={6} placeholder="Write your message..." />
+                <textarea className="w-full rounded-md border p-3" rows={6} placeholder="Write your message..." />
               </div>
               <Button>
-                <Send className="h-4 w-4 mr-2" />
+                <Send className="mr-2 h-4 w-4" />
                 Send Announcement
               </Button>
             </CardContent>
@@ -566,7 +576,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center justify-between rounded-lg border p-3">
                   <div>
                     <p className="font-medium">Event Reminder - 1 Week</p>
                     <p className="text-sm text-muted-foreground">Sent to 245 attendees • 2 days ago</p>
@@ -575,7 +585,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                     View
                   </Button>
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center justify-between rounded-lg border p-3">
                   <div>
                     <p className="font-medium">Welcome & Event Details</p>
                     <p className="text-sm text-muted-foreground">Sent to 200 attendees • 1 week ago</p>
@@ -596,7 +606,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
               <CardDescription>Manage attendee check-ins for the event</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Quick Check-in</label>
                   <div className="flex gap-2">
@@ -607,7 +617,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Bulk Check-in</label>
                   <Button variant="outline" className="w-full">
-                    <Upload className="h-4 w-4 mr-2" />
+                    <Upload className="mr-2 h-4 w-4" />
                     Upload Check-in List
                   </Button>
                 </div>
@@ -619,7 +629,7 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
                 <h4 className="font-medium">Recent Check-ins</h4>
                 <div className="space-y-2">
                   {/* This would show recent check-ins */}
-                  <div className="text-center text-muted-foreground py-8">No check-ins yet. Event hasn't started.</div>
+                  <div className="py-8 text-center text-muted-foreground">No check-ins yet. Event hasn't started.</div>
                 </div>
               </div>
             </CardContent>
@@ -634,28 +644,28 @@ export default function ManageEventPage({ params }: { params: { id: string } }) 
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium">Registration Open</p>
                     <p className="text-sm text-muted-foreground">Allow new registrations</p>
                   </div>
                   <input type="checkbox" defaultChecked className="rounded" />
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium">Waitlist Enabled</p>
                     <p className="text-sm text-muted-foreground">Allow waitlist when full</p>
                   </div>
                   <input type="checkbox" defaultChecked className="rounded" />
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium">Auto-confirm from Waitlist</p>
                     <p className="text-sm text-muted-foreground">Automatically confirm when spots open</p>
                   </div>
                   <input type="checkbox" defaultChecked className="rounded" />
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="font-medium">Send Reminders</p>
                     <p className="text-sm text-muted-foreground">Email reminders before event</p>
