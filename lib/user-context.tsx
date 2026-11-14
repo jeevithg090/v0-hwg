@@ -1,75 +1,110 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import {
+  ACCOUNTS_STORAGE_KEY,
+  SESSION_STORAGE_KEY,
+  findAccountByEmail,
+  parseStoredAccounts,
+  parseStoredUser,
+  upsertAccount,
+  type User,
+} from "@/lib/auth"
 
-export type UserRole = "freelancer" | "client" | "startup"
-
-export interface User {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  avatar?: string
-  company?: string
-  verified: boolean
-  joinedAt: string
-}
+export type { User, UserRole } from "@/lib/auth"
 
 interface UserContextType {
   user: User | null
-  setUser: (user: User | null) => void
+  /** True until the persisted session has been read on the client. */
+  isLoading: boolean
   isClient: boolean
   isFreelancer: boolean
   isStartup: boolean
+  /** Persists a new account and starts a session for it. */
+  register: (user: User) => void
+  /** Starts a session for a previously registered email. Returns the user, or null if none exists. */
+  signIn: (email: string) => User | null
+  /** Starts a session for an arbitrary user (used by the demo social login). */
+  setUser: (user: User) => void
   logout: () => void
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+function readStorage(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
 
-  // Mock user data - in real app, this would come from authentication
+function writeStorage(key: string, value: string | null) {
+  try {
+    if (value === null) window.localStorage.removeItem(key)
+    else window.localStorage.setItem(key, value)
+  } catch {
+    // Storage can be unavailable (private mode, quota); the session stays in memory.
+  }
+}
+
+export function UserProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUserState] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
-    // Check if user data exists in localStorage
-    const savedUser = localStorage.getItem("techcollab_user")
-    if (savedUser) {
-      setUser(JSON.parse(savedUser))
-    } else {
-      // Default to null - user needs to sign up/sign in
-      setUser(null)
-    }
+    const stored = parseStoredUser(readStorage(SESSION_STORAGE_KEY))
+    if (!stored) writeStorage(SESSION_STORAGE_KEY, null)
+    setUserState(stored)
+    setIsLoading(false)
   }, [])
 
-  const isClient = user?.role === "client"
-  const isFreelancer = user?.role === "freelancer"
-  const isStartup = user?.role === "startup"
+  const setUser = useCallback((next: User) => {
+    setUserState(next)
+    writeStorage(SESSION_STORAGE_KEY, JSON.stringify(next))
+  }, [])
 
-  const saveUser = (userData: User) => {
-    setUser(userData)
-    localStorage.setItem("techcollab_user", JSON.stringify(userData))
-  }
-
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem("techcollab_user")
-  }
-
-  return (
-    <UserContext.Provider
-      value={{
-        user,
-        setUser: saveUser,
-        isClient,
-        isFreelancer,
-        isStartup,
-        logout,
-      }}
-    >
-      {children}
-    </UserContext.Provider>
+  const register = useCallback(
+    (next: User) => {
+      const accounts = parseStoredAccounts(readStorage(ACCOUNTS_STORAGE_KEY))
+      writeStorage(ACCOUNTS_STORAGE_KEY, JSON.stringify(upsertAccount(accounts, next)))
+      setUser(next)
+    },
+    [setUser],
   )
+
+  const signIn = useCallback(
+    (email: string) => {
+      const account = findAccountByEmail(parseStoredAccounts(readStorage(ACCOUNTS_STORAGE_KEY)), email)
+      if (!account) return null
+      setUser(account)
+      return account
+    },
+    [setUser],
+  )
+
+  const logout = useCallback(() => {
+    setUserState(null)
+    writeStorage(SESSION_STORAGE_KEY, null)
+  }, [])
+
+  const value = useMemo<UserContextType>(
+    () => ({
+      user,
+      isLoading,
+      isClient: user?.role === "client",
+      isFreelancer: user?.role === "freelancer",
+      isStartup: user?.role === "startup",
+      register,
+      signIn,
+      setUser,
+      logout,
+    }),
+    [user, isLoading, register, signIn, setUser, logout],
+  )
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
 
 export function useUser() {
