@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress"
 import {
   Search,
-  Filter,
   Plus,
   MapPin,
   Clock,
@@ -27,6 +26,11 @@ import {
 import Link from "next/link"
 import { useState } from "react"
 import { useUser } from "@/lib/user-context"
+import { useTabParam } from "@/hooks/use-tab-param"
+import { BUDGET_FILTERS, filterGigs, formatBudget, type BudgetFilter, type BudgetType } from "@/lib/gigs"
+
+const HOST_TABS = ["my-projects", "active-contracts", "proposals", "analytics"] as const
+const FREELANCER_TABS = ["browse-gigs", "my-proposals", "saved-gigs", "my-stats"] as const
 
 // Mock data
 const mockGigs = [
@@ -36,7 +40,7 @@ const mockGigs = [
     description:
       "Looking for an experienced React Native developer to build a cross-platform e-commerce mobile application with payment integration, user authentication, and real-time notifications.",
     budget: 5000,
-    budgetType: "fixed" as const,
+    budgetType: "fixed" as BudgetType,
     duration: "2-3 months",
     experienceLevel: "Expert",
     skills: ["React Native", "TypeScript", "Firebase", "Stripe"],
@@ -54,7 +58,7 @@ const mockGigs = [
     description:
       "Need a full-stack developer to create an AI-powered analytics dashboard using Python, React, and machine learning libraries for data visualization and insights.",
     budget: 75,
-    budgetType: "hourly" as const,
+    budgetType: "hourly" as BudgetType,
     duration: "1-2 months",
     experienceLevel: "Intermediate",
     skills: ["Python", "React", "Machine Learning", "D3.js"],
@@ -75,7 +79,7 @@ const mockMyGigs = [
     description:
       "Building a single-page application for healthcare management with patient records, appointment scheduling, and telemedicine features.",
     budget: 8000,
-    budgetType: "fixed" as const,
+    budgetType: "fixed" as BudgetType,
     duration: "3-4 months",
     experienceLevel: "Expert",
     skills: ["Vue.js", "Node.js", "PostgreSQL", "WebRTC"],
@@ -112,18 +116,21 @@ const mockProposals = [
 ]
 
 export default function FreelancingPage() {
-  const { user, isClient, isFreelancer, isStartup } = useUser()
+  const { isClient, isStartup } = useUser()
+  const [hostTab, setHostTab] = useTabParam("my-projects", HOST_TABS)
+  const [freelancerTab, setFreelancerTab] = useTabParam("browse-gigs", FREELANCER_TABS)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedBudget, setSelectedBudget] = useState("all")
+  const [selectedBudget, setSelectedBudget] = useState<BudgetFilter>("all")
+  const visibleGigs = filterGigs(mockGigs, { search: searchTerm, category: selectedCategory, budget: selectedBudget })
 
   // Client/Startup View
   if (isClient || isStartup) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h1 className="text-3xl font-bold">Project Management</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">Project Management</h1>
             <p className="text-muted-foreground">
               {isStartup
                 ? "Manage your startup's projects and find talent"
@@ -138,8 +145,8 @@ export default function FreelancingPage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="my-projects" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs value={hostTab} onValueChange={setHostTab} className="space-y-6">
+          <TabsList className="flex h-auto w-full flex-wrap justify-start sm:grid sm:grid-cols-4">
             <TabsTrigger value="my-projects">My Projects</TabsTrigger>
             <TabsTrigger value="active-contracts">Active Contracts</TabsTrigger>
             <TabsTrigger value="proposals">Proposals Received</TabsTrigger>
@@ -149,52 +156,50 @@ export default function FreelancingPage() {
           <TabsContent value="my-projects" className="space-y-6">
             <div className="grid gap-6">
               {mockMyGigs.map((gig) => (
-                <Card key={gig.id} className="hover:shadow-md transition-shadow">
+                <Card key={gig.id} className="transition-shadow hover:shadow-md">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <CardTitle className="text-xl">{gig.title}</CardTitle>
                           <Badge variant={gig.status === "active" ? "default" : "secondary"}>{gig.status}</Badge>
                         </div>
                         <CardDescription className="text-base">{gig.description}</CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="ghost" size="icon" aria-label="Edit">
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" aria-label="Pause project">
                           <Pause className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" aria-label="More options">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-4 gap-4 mb-4">
-                      <div className="flex items-center gap-2">
+                    <div className="mb-4 grid gap-4 md:grid-cols-4">
+                      <div className="flex flex-wrap items-center gap-2">
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">
-                          ${gig.budget.toLocaleString()} {gig.budgetType === "hourly" ? "/hr" : "fixed"}
-                        </span>
+                        <span className="font-medium">{formatBudget(gig)}</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span>{gig.duration}</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Eye className="h-4 w-4 text-muted-foreground" />
                         <span>{gig.views} views</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Users className="h-4 w-4 text-muted-foreground" />
                         <span>{gig.proposals} proposals</span>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="mb-4 flex flex-wrap gap-2">
                       {gig.skills.map((skill) => (
                         <Badge key={skill} variant="secondary">
                           {skill}
@@ -202,7 +207,7 @@ export default function FreelancingPage() {
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-sm text-muted-foreground">
                         Posted on {new Date(gig.postedAt).toLocaleDateString()}
                       </span>
@@ -226,10 +231,10 @@ export default function FreelancingPage() {
                 <CardDescription>Projects currently in progress</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Active Contracts</h3>
-                  <p className="text-muted-foreground mb-4">
+                <div className="py-8 text-center">
+                  <Briefcase className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 text-lg font-semibold">No Active Contracts</h3>
+                  <p className="mb-4 text-muted-foreground">
                     Once you hire freelancers, their contracts will appear here
                   </p>
                   <Button asChild>
@@ -247,9 +252,9 @@ export default function FreelancingPage() {
                 <CardDescription>Review and manage freelancer proposals</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Proposals Yet</h3>
+                <div className="py-8 text-center">
+                  <MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-2 text-lg font-semibold">No Proposals Yet</h3>
                   <p className="text-muted-foreground">
                     Proposals from freelancers will appear here once you post projects
                   </p>
@@ -259,7 +264,7 @@ export default function FreelancingPage() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid gap-6 md:grid-cols-3">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Total Projects</CardTitle>
@@ -297,9 +302,9 @@ export default function FreelancingPage() {
   // Freelancer View
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Find Work</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Find Work</h1>
           <p className="text-muted-foreground">Discover projects that match your skills and interests</p>
         </div>
         <Button asChild variant="outline" className="gap-2">
@@ -310,8 +315,8 @@ export default function FreelancingPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="browse-gigs" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={freelancerTab} onValueChange={setFreelancerTab} className="space-y-6">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start sm:grid sm:grid-cols-4">
           <TabsTrigger value="browse-gigs">Browse Projects</TabsTrigger>
           <TabsTrigger value="my-proposals">My Proposals</TabsTrigger>
           <TabsTrigger value="saved-gigs">Saved Projects</TabsTrigger>
@@ -322,12 +327,13 @@ export default function FreelancingPage() {
           {/* Search and Filters */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col gap-4 md:flex-row">
                 <div className="flex-1">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                     <Input
                       placeholder="Search projects by title, skills, or keywords..."
+                      aria-label="Search projects"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -346,32 +352,35 @@ export default function FreelancingPage() {
                     <SelectItem value="ui-ux-design">UI/UX Design</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={selectedBudget} onValueChange={setSelectedBudget}>
+                <Select value={selectedBudget} onValueChange={(value) => setSelectedBudget(value as BudgetFilter)}>
                   <SelectTrigger className="w-full md:w-48">
                     <SelectValue placeholder="Budget Range" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Budgets</SelectItem>
-                    <SelectItem value="under-1k">Under $1,000</SelectItem>
-                    <SelectItem value="1k-5k">$1,000 - $5,000</SelectItem>
-                    <SelectItem value="5k-10k">$5,000 - $10,000</SelectItem>
-                    <SelectItem value="over-10k">Over $10,000</SelectItem>
+                    {Object.entries(BUDGET_FILTERS).map(([value, { label }]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  More Filters
-                </Button>
               </div>
             </CardContent>
           </Card>
 
           {/* Gig Listings */}
-          <div className="grid gap-6">
-            {mockGigs.map((gig) => (
-              <Card key={gig.id} className="hover:shadow-md transition-shadow">
+          <div className="grid gap-6" aria-live="polite">
+            {visibleGigs.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  No projects match your filters. Try a different search or category.
+                </CardContent>
+              </Card>
+            )}
+            {visibleGigs.map((gig) => (
+              <Card key={gig.id} className="transition-shadow hover:shadow-md">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="space-y-2">
                       <CardTitle className="text-xl">{gig.title}</CardTitle>
                       <CardDescription className="text-base">{gig.description}</CardDescription>
@@ -380,28 +389,26 @@ export default function FreelancingPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-4 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
+                  <div className="mb-4 grid gap-4 md:grid-cols-4">
+                    <div className="flex flex-wrap items-center gap-2">
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        ${gig.budget.toLocaleString()} {gig.budgetType === "hourly" ? "/hr" : "fixed"}
-                      </span>
+                      <span className="font-medium">{formatBudget(gig)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span>{gig.duration}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <span>{gig.location}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Star className="h-4 w-4 text-muted-foreground" />
                       <span>{gig.experienceLevel}</span>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="mb-4 flex flex-wrap gap-2">
                     {gig.skills.map((skill) => (
                       <Badge key={skill} variant="secondary">
                         {skill}
@@ -409,7 +416,7 @@ export default function FreelancingPage() {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>Posted by {gig.postedBy}</span>
                       <span>{gig.proposals} proposals</span>
@@ -435,7 +442,7 @@ export default function FreelancingPage() {
             {mockProposals.map((proposal) => (
               <Card key={proposal.id}>
                 <CardHeader>
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <CardTitle className="text-lg">{proposal.gigTitle}</CardTitle>
                       <CardDescription>Client: {proposal.clientName}</CardDescription>
@@ -454,21 +461,21 @@ export default function FreelancingPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
+                  <div className="mb-4 grid gap-4 md:grid-cols-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       <DollarSign className="h-4 w-4 text-muted-foreground" />
                       <span>${proposal.proposedBudget.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       <span>{proposal.timeline}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span>Submitted {new Date(proposal.submittedAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4">{proposal.coverLetter.substring(0, 150)}...</p>
+                  <p className="mb-4 text-sm text-muted-foreground">{proposal.coverLetter.substring(0, 150)}...</p>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       View Details
@@ -492,9 +499,9 @@ export default function FreelancingPage() {
               <CardDescription>Projects you've bookmarked for later</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <Star className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Saved Projects</h3>
+              <div className="py-8 text-center">
+                <Star className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                <h3 className="mb-2 text-lg font-semibold">No Saved Projects</h3>
                 <p className="text-muted-foreground">Save interesting projects to review them later</p>
               </div>
             </CardContent>
@@ -502,7 +509,7 @@ export default function FreelancingPage() {
         </TabsContent>
 
         <TabsContent value="my-stats" className="space-y-6">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Proposals Sent</CardTitle>
@@ -546,20 +553,20 @@ export default function FreelancingPage() {
                 <Progress value={75} />
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
                   <span>Basic information completed</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
                   <span>Skills added</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
                   <span>Add portfolio projects</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-gray-300"></div>
                   <span>Get verified</span>
                 </div>
               </div>

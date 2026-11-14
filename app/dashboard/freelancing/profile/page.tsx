@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Star, MapPin, DollarSign, Edit, Plus, X, Camera, Briefcase } from "lucide-react"
 import { useState } from "react"
+import Image from "next/image"
 
 export default function FreelancerProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -99,25 +100,25 @@ export default function FreelancerProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">My Profile</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">My Profile</h1>
           <p className="text-muted-foreground">Manage your freelancer profile and showcase your skills</p>
         </div>
         <Button onClick={() => setIsEditing(!isEditing)} variant={isEditing ? "outline" : "default"}>
-          <Edit className="h-4 w-4 mr-2" />
+          <Edit className="mr-2 h-4 w-4" />
           {isEditing ? "Cancel" : "Edit Profile"}
         </Button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Profile Overview */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="space-y-6 lg:col-span-1">
           <Card>
             <CardContent className="p-6">
-              <div className="text-center space-y-4">
+              <div className="space-y-4 text-center">
                 <div className="relative">
-                  <Avatar className="h-24 w-24 mx-auto">
+                  <Avatar className="mx-auto h-24 w-24">
                     <AvatarImage src="/placeholder.svg?height=96&width=96" />
                     <AvatarFallback className="text-2xl">JD</AvatarFallback>
                   </Avatar>
@@ -125,6 +126,7 @@ export default function FreelancerProfilePage() {
                     <Button
                       size="icon"
                       variant="outline"
+                      aria-label="Change profile photo"
                       className="absolute bottom-0 right-1/2 translate-x-1/2 translate-y-1/2"
                     >
                       <Camera className="h-4 w-4" />
@@ -199,7 +201,7 @@ export default function FreelancerProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <div className="flex justify-between text-sm mb-2">
+                <div className="mb-2 flex justify-between text-sm">
                   <span>Overall Progress</span>
                   <span>85%</span>
                 </div>
@@ -257,7 +259,7 @@ export default function FreelancerProfilePage() {
         {/* Main Content */}
         <div className="lg:col-span-2">
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="flex h-auto w-full flex-wrap justify-start sm:grid sm:grid-cols-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
@@ -297,7 +299,7 @@ export default function FreelancerProfilePage() {
                         onChange={(e) => setNewSkill(e.target.value)}
                         onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
                       />
-                      <Button onClick={addSkill} size="icon">
+                      <Button onClick={addSkill} size="icon" aria-label="Add">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -312,6 +314,7 @@ export default function FreelancerProfilePage() {
                             size="icon"
                             className="h-4 w-4 p-0 hover:bg-transparent"
                             onClick={() => removeSkill(skill)}
+                            aria-label={`Remove ${skill}`}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -329,21 +332,21 @@ export default function FreelancerProfilePage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
-                      <Briefcase className="h-5 w-5 text-muted-foreground mt-1" />
+                      <Briefcase className="mt-1 h-5 w-5 text-muted-foreground" />
                       <div>
                         <h4 className="font-medium">Senior Full-Stack Developer</h4>
                         <p className="text-sm text-muted-foreground">TechCorp Inc. • 2021 - Present</p>
-                        <p className="text-sm mt-1">
+                        <p className="mt-1 text-sm">
                           Leading development of scalable web applications using React and Node.js
                         </p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
-                      <Briefcase className="h-5 w-5 text-muted-foreground mt-1" />
+                      <Briefcase className="mt-1 h-5 w-5 text-muted-foreground" />
                       <div>
                         <h4 className="font-medium">Frontend Developer</h4>
                         <p className="text-sm text-muted-foreground">StartupXYZ • 2019 - 2021</p>
-                        <p className="text-sm mt-1">Built responsive web applications and improved user experience</p>
+                        <p className="mt-1 text-sm">Built responsive web applications and improved user experience</p>
                       </div>
                     </div>
                   </div>
@@ -360,19 +363,21 @@ export default function FreelancerProfilePage() {
                 </Button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid gap-6 md:grid-cols-2">
                 {portfolio.map((project) => (
                   <Card key={project.id} className="overflow-hidden">
                     <div className="aspect-video bg-muted">
-                      <img
+                      <Image
                         src={project.image || "/placeholder.svg"}
                         alt={project.title}
-                        className="w-full h-full object-cover"
+                        width={640}
+                        height={360}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                     <CardContent className="p-4">
-                      <h4 className="font-medium mb-2">{project.title}</h4>
-                      <p className="text-sm text-muted-foreground mb-3">{project.description}</p>
+                      <h4 className="mb-2 font-medium">{project.title}</h4>
+                      <p className="mb-3 text-sm text-muted-foreground">{project.description}</p>
                       <div className="flex flex-wrap gap-1">
                         {project.technologies.map((tech) => (
                           <Badge key={tech} variant="outline" className="text-xs">
@@ -406,7 +411,7 @@ export default function FreelancerProfilePage() {
                           <AvatarFallback>{review.avatar}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
+                          <div className="mb-2 flex items-center justify-between">
                             <div>
                               <p className="font-medium">{review.client}</p>
                               <p className="text-sm text-muted-foreground">{review.project}</p>
@@ -415,7 +420,7 @@ export default function FreelancerProfilePage() {
                               {[...Array(review.rating)].map((_, i) => (
                                 <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                               ))}
-                              <span className="text-sm text-muted-foreground ml-1">{review.date}</span>
+                              <span className="ml-1 text-sm text-muted-foreground">{review.date}</span>
                             </div>
                           </div>
                           <p className="text-sm">{review.review}</p>
@@ -436,14 +441,14 @@ export default function FreelancerProfilePage() {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label>Profile Visibility</Label>
-                    <select className="w-full p-2 border rounded-md">
+                    <select className="w-full rounded-md border p-2">
                       <option>Public - Visible to all clients</option>
                       <option>Private - Only visible to invited clients</option>
                     </select>
                   </div>
                   <div className="space-y-2">
                     <Label>Availability Status</Label>
-                    <select className="w-full p-2 border rounded-md">
+                    <select className="w-full rounded-md border p-2">
                       <option>Available for new projects</option>
                       <option>Busy - Limited availability</option>
                       <option>Not available</option>
@@ -477,7 +482,7 @@ export default function FreelancerProfilePage() {
       </div>
 
       {isEditing && (
-        <div className="flex justify-end space-x-4 pt-6 border-t">
+        <div className="flex justify-end space-x-4 border-t pt-6">
           <Button variant="outline" onClick={() => setIsEditing(false)}>
             Cancel
           </Button>
