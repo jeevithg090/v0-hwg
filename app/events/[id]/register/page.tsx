@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Calendar, MapPin, Clock, Users, Star, Share, ArrowLeft, CreditCard, Shield, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -136,7 +136,7 @@ export default function EventRegistrationPage() {
   const selectedTicket = event.ticketTypes.find((t) => t.id === formData.ticketType)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-slate-900">
       <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex items-center space-x-4">
@@ -431,7 +431,6 @@ export default function EventRegistrationPage() {
                 <CardContent>
                   <div className="flex items-center space-x-3">
                     <Avatar>
-                      <AvatarImage src="/placeholder.svg?height=40&width=40" />
                       <AvatarFallback>{event.organizer.avatar}</AvatarFallback>
                     </Avatar>
                     <div>

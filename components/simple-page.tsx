@@ -16,7 +16,7 @@ export function SimplePage({
   return (
     <main
       id="main-content"
-      className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-16 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+      className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 px-4 py-16 dark:from-background dark:via-background dark:to-slate-900"
     >
       <div className="w-full max-w-xl text-center">
         <BrandMark href="/" className="mb-8 justify-center" />

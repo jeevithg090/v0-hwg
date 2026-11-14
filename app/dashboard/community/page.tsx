@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -74,7 +74,9 @@ function CommunityContent() {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Scroll only the message pane, not the whole page.
+    const viewport = messagesEndRef.current?.closest<HTMLElement>("[data-radix-scroll-area-viewport]")
+    if (viewport) viewport.scrollTop = viewport.scrollHeight
   }
 
   useEffect(() => {
@@ -193,17 +195,17 @@ function CommunityContent() {
         </div>
       </div>
 
-      <div className="grid h-[calc(100vh-200px)] grid-cols-1 gap-6 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 lg:h-[calc(100vh-200px)] lg:min-h-[560px] lg:grid-cols-4">
         {/* Sidebar */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Conversations</CardTitle>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Settings">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Settings">
                   <Settings className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Notifications">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Notifications">
                   <Bell className="h-3 w-3" />
                 </Button>
               </div>
@@ -220,7 +222,7 @@ function CommunityContent() {
           </CardHeader>
           <CardContent className="p-0">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="mx-4 mb-4 grid w-full grid-cols-2">
+              <TabsList className="mx-4 mb-4 grid w-[calc(100%-2rem)] grid-cols-2">
                 <TabsTrigger value="groups" className="text-xs">
                   <Hash className="mr-1 h-3 w-3" />
                   Groups
@@ -270,7 +272,7 @@ function CommunityContent() {
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More options">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More options">
                               <MoreVertical className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -320,7 +322,6 @@ function CommunityContent() {
                         >
                           <div className="relative">
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src="/placeholder.svg?height=32&width=32" />
                               <AvatarFallback className="text-xs">{otherUser.avatar}</AvatarFallback>
                             </Avatar>
                             <div
@@ -374,7 +375,6 @@ function CommunityContent() {
                           >
                             <div className="relative">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src="/placeholder.svg?height=32&width=32" />
                                 <AvatarFallback className="text-xs">{user.avatar}</AvatarFallback>
                               </Avatar>
                               <div
@@ -408,17 +408,17 @@ function CommunityContent() {
             <>
               {/* Chat Header */}
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center space-x-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
                       {getChannelType(activeChannel) === "group" ? (
                         <Hash className="h-5 w-5 text-white" />
                       ) : (
                         <MessageCircle className="h-5 w-5 text-white" />
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{getChannelName(activeChannel)}</h3>
+                    <div className="min-w-0">
+                      <h3 className="truncate font-semibold">{getChannelName(activeChannel)}</h3>
                       <p className="text-sm text-muted-foreground">
                         {getChannelType(activeChannel) === "group"
                           ? `${groups.find((g) => g.id === activeChannel)?.members.length || 0} members`
@@ -430,11 +430,25 @@ function CommunityContent() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="icon" aria-label="Start voice call">
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden sm:inline-flex"
+                      disabled
+                      aria-label="Voice calls (coming soon)"
+                      title="Voice calls are coming soon"
+                    >
                       <Phone className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="Start video call">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="hidden sm:inline-flex"
+                      disabled
+                      aria-label="Video calls (coming soon)"
+                      title="Video calls are coming soon"
+                    >
                       <Video className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" aria-label="Invite">
@@ -489,7 +503,6 @@ function CommunityContent() {
                         >
                           {showAvatar ? (
                             <Avatar className="h-8 w-8">
-                              <AvatarImage src="/placeholder.svg?height=32&width=32" />
                               <AvatarFallback className="text-xs">{msg.senderAvatar}</AvatarFallback>
                             </Avatar>
                           ) : (
@@ -531,7 +544,7 @@ function CommunityContent() {
                                         className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors ${
                                           userIds.includes(currentUser?.id || "")
                                             ? "border border-blue-300 bg-blue-100 text-blue-800"
-                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            : "bg-muted text-muted-foreground hover:bg-accent"
                                         }`}
                                       >
                                         <span>{emoji}</span>
@@ -544,12 +557,12 @@ function CommunityContent() {
 
                               {/* Message Actions */}
                               <div
-                                className={`absolute top-0 ${isOwnMessage ? "left-0 -translate-x-full" : "right-0 translate-x-full"} opacity-0 transition-opacity group-hover/message:opacity-100`}
+                                className={`absolute -top-4 z-10 ${isOwnMessage ? "left-2" : "right-2"} opacity-0 transition-opacity focus-within:opacity-100 group-hover/message:opacity-100`}
                               >
-                                <div className="flex items-center gap-1 rounded-lg border bg-white p-1 shadow-lg">
+                                <div className="flex items-center gap-1 rounded-lg border bg-popover p-1 shadow-lg">
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Add emoji">
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Add emoji">
                                         <Smile className="h-3 w-3" />
                                       </Button>
                                     </DropdownMenuTrigger>
@@ -567,12 +580,12 @@ function CommunityContent() {
                                       </div>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Reply">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Reply">
                                     <Reply className="h-3 w-3" />
                                   </Button>
                                   {isOwnMessage && (
                                     <>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Edit">
+                                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Edit">
                                         <Edit className="h-3 w-3" />
                                       </Button>
                                       <Button
@@ -666,7 +679,7 @@ function CommunityContent() {
                     <div className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center gap-1">
                       <DropdownMenu open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Add emoji">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Add emoji">
                             <Smile className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -724,7 +737,7 @@ function CommunityContent() {
                                     setMessage((prev) => prev + emoji)
                                     setShowEmojiPicker(false)
                                   }}
-                                  className="rounded p-1 text-lg hover:bg-gray-100"
+                                  className="rounded p-1 text-lg hover:bg-accent"
                                 >
                                   {emoji}
                                 </button>
@@ -732,7 +745,7 @@ function CommunityContent() {
                           </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Send gift">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Send gift">
                         <Gift className="h-4 w-4" />
                       </Button>
                     </div>
@@ -771,7 +784,7 @@ function CommunityContent() {
       </div>
 
       {/* Community Stats */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>

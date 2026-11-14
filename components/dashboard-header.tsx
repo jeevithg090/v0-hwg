@@ -31,11 +31,11 @@ export function DashboardHeader() {
   const isHost = canHostContent(user?.role)
 
   return (
-    <header className="sticky top-0 z-20 border-b bg-white px-4 py-3 dark:bg-gray-900 sm:px-6">
+    <header className="sticky top-0 z-20 border-b bg-background/95 px-4 py-3 backdrop-blur-sm sm:px-6">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-4">
           <SidebarTrigger />
-          <div className="relative hidden md:block">
+          <div className="relative hidden lg:block">
             <Search
               className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden="true"

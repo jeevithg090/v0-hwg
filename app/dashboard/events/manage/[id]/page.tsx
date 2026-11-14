@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
@@ -183,7 +183,7 @@ function ManageEvent() {
       case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
       case "refunded":
-        return <Badge className="bg-gray-100 text-gray-800">Refunded</Badge>
+        return <Badge variant="secondary">Refunded</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
@@ -365,7 +365,6 @@ function ManageEvent() {
                           className="rounded"
                         />
                         <Avatar className="h-10 w-10">
-                          <AvatarImage src="/placeholder.svg?height=40&width=40" />
                           <AvatarFallback>
                             {attendee.name
                               .split(" ")

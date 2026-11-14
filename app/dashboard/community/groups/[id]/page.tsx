@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -343,7 +343,6 @@ export default function GroupManagementPage() {
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src="/placeholder.svg?height=48&width=48" />
                           <AvatarFallback>{member.avatar}</AvatarFallback>
                         </Avatar>
                         <div
@@ -661,7 +660,6 @@ export default function GroupManagementPage() {
                       <div className="flex items-center gap-3">
                         <span className="w-4 text-sm font-medium">#{index + 1}</span>
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src="/placeholder.svg?height=32&width=32" />
                           <AvatarFallback className="text-xs">{member.avatar}</AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium">{member.name}</span>
