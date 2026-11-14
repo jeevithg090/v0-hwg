@@ -13,11 +13,13 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, MapPin, Clock, Users, Star, Share, ArrowLeft, CreditCard, Shield, CheckCircle } from "lucide-react"
+import { toast } from "sonner"
 import Link from "next/link"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 
-export default function EventRegistrationPage({ params }: { params: { id: string } }) {
+export default function EventRegistrationPage() {
+  const params = useParams<{ id: string }>()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -117,7 +119,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
+      toast.error("Please agree to the terms and conditions")
       return
     }
 
@@ -126,8 +128,9 @@ export default function EventRegistrationPage({ params }: { params: { id: string
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false)
-      router.push(`/events/${event.id}/confirmation`)
-    }, 2000)
+      toast.success(`You're registered for ${event.title}!`)
+      router.push("/dashboard/events?tab=registered")
+    }, 800)
   }
 
   const selectedTicket = event.ticketTypes.find((t) => t.id === formData.ticketType)
@@ -135,20 +138,20 @@ export default function EventRegistrationPage({ params }: { params: { id: string
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center space-x-4 mb-6">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/events">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 flex items-center space-x-4">
+            <Button variant="ghost" size="icon" asChild aria-label="Go back">
+              <Link href="/dashboard/events" aria-label="Back to events">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Event Registration</h1>
+              <h1 className="text-2xl font-bold sm:text-3xl">Event Registration</h1>
               <p className="text-muted-foreground">Secure your spot at this amazing event</p>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid gap-8 lg:grid-cols-3">
             {/* Registration Form */}
             <div className="lg:col-span-2">
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -159,7 +162,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
                     <CardDescription>Please provide your details for registration</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name *</Label>
                         <Input
@@ -180,7 +183,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="email">Email Address *</Label>
                         <Input
@@ -202,7 +205,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="company">Company/Organization</Label>
                         <Input
@@ -234,7 +237,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
                       {event.ticketTypes.map((ticket) => (
                         <div
                           key={ticket.id}
-                          className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                          className={`cursor-pointer rounded-lg border p-4 transition-colors ${
                             formData.ticketType === ticket.id
                               ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                               : "border-gray-200 hover:border-gray-300"
@@ -258,7 +261,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-lg">{ticket.price === 0 ? "Free" : `$${ticket.price}`}</p>
+                              <p className="text-lg font-bold">{ticket.price === 0 ? "Free" : `$${ticket.price}`}</p>
                             </div>
                           </div>
                         </div>
@@ -409,7 +412,7 @@ export default function EventRegistrationPage({ params }: { params: { id: string
                   <Separator />
 
                   <div>
-                    <p className="text-sm font-medium mb-2">Event Tags:</p>
+                    <p className="mb-2 text-sm font-medium">Event Tags:</p>
                     <div className="flex flex-wrap gap-1">
                       {event.tags.map((tag) => (
                         <Badge key={tag} variant="outline" className="text-xs">

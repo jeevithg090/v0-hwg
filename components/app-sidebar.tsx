@@ -10,10 +10,15 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
+  SidebarMenuBadge,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type React from "react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { BrandMark } from "@/components/brand"
+import { getInitials } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 import {
   Home,
@@ -26,83 +31,49 @@ import {
   TrendingUp,
   Star,
   DollarSign,
+  User,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useUser } from "@/lib/user-context"
 
+interface NavItem {
+  title: string
+  url: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
 export function AppSidebar() {
   const pathname = usePathname()
   const { user, isClient, isFreelancer, isStartup } = useUser()
 
-  const mainNavItems = [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: Home,
-    },
-    {
-      title: isClient || isStartup ? "Projects" : "Find Work",
-      url: "/dashboard/freelancing",
-      icon: Briefcase,
-      badge: isClient || isStartup ? "3" : "12",
-    },
-    {
-      title: "Events",
-      url: "/dashboard/events",
-      icon: Calendar,
-      badge: "3",
-    },
-    {
-      title: "Community",
-      url: "/dashboard/community",
-      icon: MessageCircle,
-      badge: "5",
-    },
-    {
-      title: "Network",
-      url: "/dashboard/network",
-      icon: Users,
-    },
+  const { setOpenMobile } = useSidebar()
+  const isHost = isClient || isStartup
+
+  const mainNavItems: NavItem[] = [
+    { title: "Dashboard", url: "/dashboard", icon: Home },
+    { title: isHost ? "Projects" : "Find Work", url: "/dashboard/freelancing", icon: Briefcase },
+    { title: "Events", url: "/dashboard/events", icon: Calendar },
+    { title: "Community", url: "/dashboard/community", icon: MessageCircle },
+    ...(isFreelancer ? [{ title: "My Profile", url: "/dashboard/freelancing/profile", icon: User }] : []),
   ]
 
-  const quickActions = [
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: TrendingUp,
-    },
-    {
-      title: "Earnings",
-      url: "/dashboard/earnings",
-      icon: DollarSign,
-    },
-    {
-      title: "Reviews",
-      url: "/dashboard/reviews",
-      icon: Star,
-    },
-    {
-      title: "Notifications",
-      url: "/dashboard/notifications",
-      icon: Bell,
-    },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: Settings,
-    },
+  // Planned sections that don't have pages yet.
+  const comingSoon: NavItem[] = [
+    { title: "Network", url: "", icon: Users },
+    { title: "Analytics", url: "", icon: TrendingUp },
+    { title: "Earnings", url: "", icon: DollarSign },
+    { title: "Reviews", url: "", icon: Star },
+    { title: "Notifications", url: "", icon: Bell },
+    { title: "Settings", url: "", icon: Settings },
   ]
+
+  const isActive = (url: string) => (url === "/dashboard" ? pathname === url : pathname.startsWith(url))
 
   return (
     <Sidebar className="border-r">
       <SidebarHeader className="p-4">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">TC</span>
-          </div>
-          <span className="font-bold text-lg">TechCollab</span>
-        </div>
+        <BrandMark size="sm" href="/dashboard" />
       </SidebarHeader>
 
       <SidebarContent>
@@ -111,18 +82,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </div>
-                      {item.badge && (
-                        <Badge variant="secondary" className="ml-auto">
-                          {item.badge}
-                        </Badge>
-                      )}
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                    <Link href={item.url} onClick={() => setOpenMobile(false)}>
+                      <item.icon className="h-4 w-4" aria-hidden="true" />
+                      <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -132,17 +96,16 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupLabel>Coming Soon</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {quickActions.map((item) => (
+              {comingSoon.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
+                  <SidebarMenuButton disabled aria-disabled="true" tooltip={`${item.title} (coming soon)`}>
+                    <item.icon className="h-4 w-4" aria-hidden="true" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
+                  <SidebarMenuBadge>Soon</SidebarMenuBadge>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -153,19 +116,13 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <div className="flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src={user?.avatar || "/placeholder.svg?height=32&width=32"} />
-            <AvatarFallback>
-              {user?.name
-                ?.split(" ")
-                .map((n) => n[0])
-                .join("") || "U"}
-            </AvatarFallback>
+            <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name || "User"}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{user?.name || "User"}</p>
             <div className="flex items-center gap-2">
-              <p className="text-xs text-muted-foreground truncate">{user?.company || user?.email}</p>
-              <Badge variant="secondary" className="text-xs">
+              <p className="truncate text-xs text-muted-foreground">{user?.company || user?.email}</p>
+              <Badge variant="secondary" className="text-xs capitalize">
                 {user?.role}
               </Badge>
             </div>
