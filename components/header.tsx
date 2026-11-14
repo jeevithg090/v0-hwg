@@ -35,7 +35,7 @@ export function Header() {
   )
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+    <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-sm">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-background focus:px-3 focus:py-2"
@@ -75,7 +75,7 @@ export function Header() {
       </div>
 
       {isMenuOpen && (
-        <div id="mobile-menu" className="border-t bg-white p-4 dark:bg-gray-900 md:hidden">
+        <div id="mobile-menu" className="border-t bg-background p-4 md:hidden">
           <nav aria-label="Mobile" className="flex flex-col space-y-4">
             {navLinks.map((link) => (
               <Link

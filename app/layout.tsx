@@ -15,11 +15,16 @@ export const metadata: Metadata = {
     template: "%s | TechCollab",
   },
   description:
-    "Connect, collaborate, and grow with freelance projects, tech events, and real-time communities in one platform.",
+    "Connect, collaborate, and grow with freelance projects, tech events, and community chat in one platform.",
   applicationName: "TechCollab",
   openGraph: {
     type: "website",
     siteName: "TechCollab",
+    title: "TechCollab - All-in-One Tech Collaboration Platform",
+    description: "Freelance projects, tech events, and communities in one platform.",
+  },
+  twitter: {
+    card: "summary_large_image",
     title: "TechCollab - All-in-One Tech Collaboration Platform",
     description: "Freelance projects, tech events, and communities in one platform.",
   },

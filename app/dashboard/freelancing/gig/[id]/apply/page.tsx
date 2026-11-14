@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { ArrowLeft, DollarSign, Calendar, Clock, Star, Paperclip, Send } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -248,7 +248,6 @@ export default function ApplyToGigPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-3">
                 <Avatar>
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" />
                   <AvatarFallback>{gig.client.avatar}</AvatarFallback>
                 </Avatar>
                 <div>

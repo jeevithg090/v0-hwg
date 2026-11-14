@@ -6,19 +6,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Star, MapPin, DollarSign, Edit, Plus, X, Camera, Briefcase } from "lucide-react"
 import { useState } from "react"
 import Image from "next/image"
+import { getInitials } from "@/lib/auth"
+import { useUser } from "@/lib/user-context"
 
 export default function FreelancerProfilePage() {
+  const { user } = useUser()
   const [isEditing, setIsEditing] = useState(false)
   const [skills, setSkills] = useState(["React", "Node.js", "TypeScript", "MongoDB", "AWS"])
   const [newSkill, setNewSkill] = useState("")
   const [profile, setProfile] = useState({
-    name: "John Doe",
+    name: user?.name ?? "Your Name",
     title: "Full-Stack Developer",
     location: "San Francisco, CA",
     hourlyRate: "75",
@@ -50,7 +53,7 @@ export default function FreelancerProfilePage() {
       rating: 5,
       project: "E-commerce Website",
       review:
-        "Excellent work! John delivered exactly what we needed on time and within budget. Great communication throughout the project.",
+        "Excellent work! They delivered exactly what we needed on time and within budget. Great communication throughout the project.",
       date: "2 weeks ago",
     },
     {
@@ -119,8 +122,7 @@ export default function FreelancerProfilePage() {
               <div className="space-y-4 text-center">
                 <div className="relative">
                   <Avatar className="mx-auto h-24 w-24">
-                    <AvatarImage src="/placeholder.svg?height=96&width=96" />
-                    <AvatarFallback className="text-2xl">JD</AvatarFallback>
+                    <AvatarFallback className="text-2xl">{getInitials(profile.name)}</AvatarFallback>
                   </Avatar>
                   {isEditing && (
                     <Button
@@ -407,7 +409,6 @@ export default function FreelancerProfilePage() {
                     <CardContent className="p-4">
                       <div className="flex items-start space-x-3">
                         <Avatar>
-                          <AvatarImage src="/placeholder.svg?height=40&width=40" />
                           <AvatarFallback>{review.avatar}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">

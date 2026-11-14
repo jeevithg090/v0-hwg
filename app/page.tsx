@@ -83,7 +83,7 @@ const highlights: { icon: React.ComponentType<{ className?: string }>; title: st
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-background dark:via-background dark:to-slate-900">
       <Header />
 
       <main id="main-content">
