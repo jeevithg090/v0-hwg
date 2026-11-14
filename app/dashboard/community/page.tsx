@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -39,7 +41,7 @@ import {
 } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { useChatContext } from "@/lib/chat-context"
-import { ChatProvider } from "@/lib/chat-context"
+import { formatTypingIndicator } from "@/lib/chat-utils"
 
 function CommunityContent() {
   const {
@@ -57,7 +59,6 @@ function CommunityContent() {
     setTyping,
     startDirectMessage,
     createGroup,
-    joinGroup,
     leaveGroup,
   } = useChatContext()
 
@@ -70,7 +71,7 @@ function CommunityContent() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTab, setSelectedTab] = useState("groups")
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<NodeJS.Timeout>()
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -171,12 +172,12 @@ function CommunityContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Community Hub</h1>
-          <p className="text-muted-foreground flex items-center gap-2">
+          <h1 className="text-2xl font-bold sm:text-3xl">Community Hub</h1>
+          <p className="flex items-center gap-2 text-muted-foreground">
             Connect and collaborate with the tech community
-            <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
+            <div className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}></div>
             <span className="text-xs">{isConnected ? "Connected" : "Disconnected"}</span>
           </p>
         </div>
@@ -192,26 +193,26 @@ function CommunityContent() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
+      <div className="grid h-[calc(100vh-200px)] grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Sidebar */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Conversations</CardTitle>
               <div className="flex gap-1">
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Settings">
                   <Settings className="h-3 w-3" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Notifications">
                   <Bell className="h-3 w-3" />
                 </Button>
               </div>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
               <Input
                 placeholder="Search..."
-                className="pl-10 h-8"
+                className="h-8 pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -219,13 +220,13 @@ function CommunityContent() {
           </CardHeader>
           <CardContent className="p-0">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mx-4 mb-4">
+              <TabsList className="mx-4 mb-4 grid w-full grid-cols-2">
                 <TabsTrigger value="groups" className="text-xs">
-                  <Hash className="h-3 w-3 mr-1" />
+                  <Hash className="mr-1 h-3 w-3" />
                   Groups
                 </TabsTrigger>
                 <TabsTrigger value="dms" className="text-xs">
-                  <MessageCircle className="h-3 w-3 mr-1" />
+                  <MessageCircle className="mr-1 h-3 w-3" />
                   Direct
                 </TabsTrigger>
               </TabsList>
@@ -236,13 +237,13 @@ function CommunityContent() {
                     {filteredGroups.map((group) => (
                       <div
                         key={group.id}
-                        className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer hover:bg-muted transition-colors ${
+                        className={`flex cursor-pointer items-center space-x-3 rounded-lg p-2 transition-colors hover:bg-muted ${
                           activeChannel === group.id ? "bg-muted" : ""
                         }`}
                         onClick={() => setActiveChannel(group.id)}
                       >
                         <div className="relative">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
                             {group.type === "private" ? (
                               <Lock className="h-4 w-4 text-white" />
                             ) : (
@@ -252,43 +253,43 @@ function CommunityContent() {
                           {group.unreadCount > 0 && (
                             <Badge
                               variant="destructive"
-                              className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs"
+                              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center p-0 text-xs"
                             >
                               {group.unreadCount}
                             </Badge>
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium truncate flex items-center gap-1">
+                            <p className="flex items-center gap-1 truncate text-sm font-medium">
                               {group.name}
                               {group.type === "private" && <Lock className="h-3 w-3" />}
                             </p>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">{group.members.length} members</p>
+                          <p className="truncate text-xs text-muted-foreground">{group.members.length} members</p>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="More options">
                               <MoreVertical className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
-                              <Bell className="h-4 w-4 mr-2" />
+                              <Bell className="mr-2 h-4 w-4" />
                               Mute Notifications
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Pin className="h-4 w-4 mr-2" />
+                              <Pin className="mr-2 h-4 w-4" />
                               Pin Channel
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <Users className="h-4 w-4 mr-2" />
+                              <Users className="mr-2 h-4 w-4" />
                               View Members
                             </DropdownMenuItem>
                             {group.type === "public" && (
                               <DropdownMenuItem onClick={() => leaveGroup(group.id)}>
-                                <UserPlus className="h-4 w-4 mr-2" />
+                                <UserPlus className="mr-2 h-4 w-4" />
                                 Leave Group
                               </DropdownMenuItem>
                             )}
@@ -312,7 +313,7 @@ function CommunityContent() {
                       return (
                         <div
                           key={dm.id}
-                          className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer hover:bg-muted transition-colors ${
+                          className={`flex cursor-pointer items-center space-x-3 rounded-lg p-2 transition-colors hover:bg-muted ${
                             activeChannel === dm.id ? "bg-muted" : ""
                           }`}
                           onClick={() => setActiveChannel(dm.id)}
@@ -323,7 +324,7 @@ function CommunityContent() {
                               <AvatarFallback className="text-xs">{otherUser.avatar}</AvatarFallback>
                             </Avatar>
                             <div
-                              className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                              className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white ${
                                 otherUser.status === "online"
                                   ? "bg-green-500"
                                   : otherUser.status === "away"
@@ -334,14 +335,14 @@ function CommunityContent() {
                             {dm.unreadCount > 0 && (
                               <Badge
                                 variant="destructive"
-                                className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs"
+                                className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center p-0 text-xs"
                               >
                                 {dm.unreadCount}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{otherUser.name}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{otherUser.name}</p>
                             <p className="text-xs text-muted-foreground">
                               {otherUser.status === "online"
                                 ? "Online"
@@ -358,7 +359,7 @@ function CommunityContent() {
 
                     {/* Online Users for Quick DM */}
                     <div className="pt-4">
-                      <p className="text-xs font-medium text-muted-foreground mb-2 px-2">Start New Conversation</p>
+                      <p className="mb-2 px-2 text-xs font-medium text-muted-foreground">Start New Conversation</p>
                       {Object.values(users)
                         .filter(
                           (user) =>
@@ -368,7 +369,7 @@ function CommunityContent() {
                         .map((user) => (
                           <div
                             key={user.id}
-                            className="flex items-center space-x-3 p-2 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                            className="flex cursor-pointer items-center space-x-3 rounded-lg p-2 transition-colors hover:bg-muted"
                             onClick={() => handleStartDM(user.id)}
                           >
                             <div className="relative">
@@ -377,7 +378,7 @@ function CommunityContent() {
                                 <AvatarFallback className="text-xs">{user.avatar}</AvatarFallback>
                               </Avatar>
                               <div
-                                className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                                className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white ${
                                   user.status === "online"
                                     ? "bg-green-500"
                                     : user.status === "away"
@@ -386,8 +387,8 @@ function CommunityContent() {
                                 }`}
                               ></div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{user.name}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">{user.name}</p>
                               <p className="text-xs text-muted-foreground">{user.status}</p>
                             </div>
                             <MessageCircle className="h-4 w-4 text-muted-foreground" />
@@ -402,14 +403,14 @@ function CommunityContent() {
         </Card>
 
         {/* Chat Area */}
-        <Card className="lg:col-span-3 flex flex-col">
+        <Card className="flex flex-col lg:col-span-3">
           {activeChannel ? (
             <>
               {/* Chat Header */}
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-600">
                       {getChannelType(activeChannel) === "group" ? (
                         <Hash className="h-5 w-5 text-white" />
                       ) : (
@@ -430,39 +431,39 @@ function CommunityContent() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Start voice call">
                       <Phone className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Start video call">
                       <Video className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Invite">
                       <UserPlus className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Search">
                       <Search className="h-4 w-4" />
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" aria-label="More options">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <Bell className="h-4 w-4 mr-2" />
+                          <Bell className="mr-2 h-4 w-4" />
                           Mute Notifications
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Pin className="h-4 w-4 mr-2" />
+                          <Pin className="mr-2 h-4 w-4" />
                           Pinned Messages
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Search className="h-4 w-4 mr-2" />
+                          <Search className="mr-2 h-4 w-4" />
                           Search Messages
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Settings className="h-4 w-4 mr-2" />
+                          <Settings className="mr-2 h-4 w-4" />
                           Channel Settings
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -484,7 +485,7 @@ function CommunityContent() {
                       return (
                         <div
                           key={msg.id}
-                          className={`flex items-start space-x-3 group ${isOwnMessage ? "flex-row-reverse space-x-reverse" : ""}`}
+                          className={`group flex items-start space-x-3 ${isOwnMessage ? "flex-row-reverse space-x-reverse" : ""}`}
                         >
                           {showAvatar ? (
                             <Avatar className="h-8 w-8">
@@ -506,31 +507,31 @@ function CommunityContent() {
                                 {msg.edited && <span className="text-xs text-muted-foreground">(edited)</span>}
                               </div>
                             )}
-                            <div className={`relative group/message ${isOwnMessage ? "flex justify-end" : ""}`}>
+                            <div className={`group/message relative ${isOwnMessage ? "flex justify-end" : ""}`}>
                               <div
-                                className={`max-w-[70%] p-3 rounded-lg ${
+                                className={`max-w-[70%] rounded-lg p-3 ${
                                   isOwnMessage ? "bg-blue-500 text-white" : "bg-muted"
-                                } ${msg.type === "announcement" ? "bg-yellow-100 border border-yellow-300" : ""}`}
+                                } ${msg.type === "announcement" ? "border border-yellow-300 bg-yellow-100" : ""}`}
                               >
                                 {msg.type === "announcement" && (
-                                  <div className="flex items-center gap-2 mb-2">
+                                  <div className="mb-2 flex items-center gap-2">
                                     <Zap className="h-4 w-4 text-yellow-600" />
                                     <span className="text-sm font-medium text-yellow-800">Announcement</span>
                                   </div>
                                 )}
-                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
 
                                 {/* Reactions */}
                                 {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                                  <div className="flex flex-wrap gap-1 mt-2">
+                                  <div className="mt-2 flex flex-wrap gap-1">
                                     {Object.entries(msg.reactions).map(([emoji, userIds]) => (
                                       <button
                                         key={emoji}
                                         onClick={() => addReaction(msg.id, emoji)}
-                                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors ${
+                                        className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors ${
                                           userIds.includes(currentUser?.id || "")
-                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                            ? "border border-blue-300 bg-blue-100 text-blue-800"
+                                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                         }`}
                                       >
                                         <span>{emoji}</span>
@@ -543,12 +544,12 @@ function CommunityContent() {
 
                               {/* Message Actions */}
                               <div
-                                className={`absolute top-0 ${isOwnMessage ? "left-0 -translate-x-full" : "right-0 translate-x-full"} opacity-0 group-hover/message:opacity-100 transition-opacity`}
+                                className={`absolute top-0 ${isOwnMessage ? "left-0 -translate-x-full" : "right-0 translate-x-full"} opacity-0 transition-opacity group-hover/message:opacity-100`}
                               >
-                                <div className="flex items-center gap-1 bg-white border rounded-lg shadow-lg p-1">
+                                <div className="flex items-center gap-1 rounded-lg border bg-white p-1 shadow-lg">
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Add emoji">
                                         <Smile className="h-3 w-3" />
                                       </Button>
                                     </DropdownMenuTrigger>
@@ -558,7 +559,7 @@ function CommunityContent() {
                                           <button
                                             key={emoji}
                                             onClick={() => addReaction(msg.id, emoji)}
-                                            className="p-1 hover:bg-gray-100 rounded text-lg"
+                                            className="rounded p-1 text-lg hover:bg-accent"
                                           >
                                             {emoji}
                                           </button>
@@ -566,15 +567,20 @@ function CommunityContent() {
                                       </div>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Reply">
                                     <Reply className="h-3 w-3" />
                                   </Button>
                                   {isOwnMessage && (
                                     <>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                                      <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Edit">
                                         <Edit className="h-3 w-3" />
                                       </Button>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-red-500"
+                                        aria-label="Delete"
+                                      >
                                         <Trash className="h-3 w-3" />
                                       </Button>
                                     </>
@@ -591,19 +597,18 @@ function CommunityContent() {
                     {currentTypingUsers.length > 0 && (
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></div>
                           <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
                             style={{ animationDelay: "0.1s" }}
                           ></div>
                           <div
-                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
                             style={{ animationDelay: "0.2s" }}
                           ></div>
                         </div>
                         <span>
-                          {currentTypingUsers.map((userId) => users[userId]?.name).join(", ")}
-                          {currentTypingUsers.length === 1 ? " is" : " are"} typing...
+                          {formatTypingIndicator(currentTypingUsers.map((userId) => users[userId]?.name ?? "Someone"))}
                         </span>
                       </div>
                     )}
@@ -620,52 +625,53 @@ function CommunityContent() {
                 <div className="flex items-center space-x-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Attach file">
                         <Paperclip className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       <DropdownMenuItem>
-                        <ImageIcon className="h-4 w-4 mr-2" />
+                        <ImageIcon className="mr-2 h-4 w-4" />
                         Upload Image
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <File className="h-4 w-4 mr-2" />
+                        <File className="mr-2 h-4 w-4" />
                         Upload File
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <Camera className="h-4 w-4 mr-2" />
+                        <Camera className="mr-2 h-4 w-4" />
                         Take Photo
                       </DropdownMenuItem>
                       <DropdownMenuItem>
-                        <Mic className="h-4 w-4 mr-2" />
+                        <Mic className="mr-2 h-4 w-4" />
                         Voice Message
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  <div className="flex-1 relative">
+                  <div className="relative flex-1">
                     <Input
                       placeholder="Type a message..."
+                      aria-label="Message"
                       value={message}
                       onChange={(e) => handleTyping(e.target.value)}
                       className="pr-20"
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault()
                           handleSendMessage()
                         }
                       }}
                     />
-                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                    <div className="absolute right-2 top-1/2 flex -translate-y-1/2 transform items-center gap-1">
                       <DropdownMenu open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Add emoji">
                             <Smile className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                          <div className="grid grid-cols-8 gap-1 p-2 w-64">
+                          <div className="grid w-64 grid-cols-8 gap-1 p-2">
                             {emojis
                               .concat([
                                 "😀",
@@ -712,11 +718,13 @@ function CommunityContent() {
                               .map((emoji) => (
                                 <button
                                   key={emoji}
+                                  type="button"
+                                  aria-label={`Insert ${emoji}`}
                                   onClick={() => {
                                     setMessage((prev) => prev + emoji)
                                     setShowEmojiPicker(false)
                                   }}
-                                  className="p-1 hover:bg-gray-100 rounded text-lg"
+                                  className="rounded p-1 text-lg hover:bg-gray-100"
                                 >
                                   {emoji}
                                 </button>
@@ -724,27 +732,33 @@ function CommunityContent() {
                           </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Send gift">
                         <Gift className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  <Button onClick={handleSendMessage} size="icon" disabled={!message.trim()} className="shrink-0">
+                  <Button
+                    onClick={handleSendMessage}
+                    size="icon"
+                    disabled={!message.trim()}
+                    className="shrink-0"
+                    aria-label="Send message"
+                  >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <MessageCircle className="h-16 w-16 text-muted-foreground mx-auto" />
+            <div className="flex flex-1 items-center justify-center">
+              <div className="space-y-4 text-center">
+                <MessageCircle className="mx-auto h-16 w-16 text-muted-foreground" />
                 <div>
                   <h3 className="text-lg font-semibold">Welcome to Community Chat</h3>
                   <p className="text-muted-foreground">Select a channel or start a conversation to begin</p>
                 </div>
-                <div className="flex gap-2 justify-center">
+                <div className="flex justify-center gap-2">
                   <Button variant="outline" onClick={() => setSelectedTab("groups")}>
                     Browse Groups
                   </Button>
@@ -757,7 +771,7 @@ function CommunityContent() {
       </div>
 
       {/* Community Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
@@ -800,7 +814,7 @@ function CommunityContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Online Now</CardTitle>
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="h-2 w-2 rounded-full bg-green-500"></div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -811,71 +825,78 @@ function CommunityContent() {
         </Card>
       </div>
 
-      {/* Create Group Modal */}
-      {showCreateGroup && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Create New Group</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Group Name</label>
-                <Input
-                  placeholder="Enter group name"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Description</label>
-                <Input
-                  placeholder="Enter group description"
-                  value={newGroupDescription}
-                  onChange={(e) => setNewGroupDescription(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Privacy</label>
-                <div className="flex gap-2">
-                  <Button
-                    variant={newGroupType === "public" ? "default" : "outline"}
-                    onClick={() => setNewGroupType("public")}
-                    className="flex-1"
-                  >
-                    <Globe className="h-4 w-4 mr-2" />
-                    Public
-                  </Button>
-                  <Button
-                    variant={newGroupType === "private" ? "default" : "outline"}
-                    onClick={() => setNewGroupType("private")}
-                    className="flex-1"
-                  >
-                    <Lock className="h-4 w-4 mr-2" />
-                    Private
-                  </Button>
-                </div>
-              </div>
+      <Dialog open={showCreateGroup} onOpenChange={setShowCreateGroup}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Group</DialogTitle>
+            <DialogDescription>Start a space for your team or community.</DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleCreateGroup()
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="group-name">Group Name</Label>
+              <Input
+                id="group-name"
+                placeholder="Enter group name"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="group-description">Description</Label>
+              <Input
+                id="group-description"
+                placeholder="Enter group description"
+                value={newGroupDescription}
+                onChange={(e) => setNewGroupDescription(e.target.value)}
+              />
+            </div>
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Privacy</legend>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowCreateGroup(false)} className="flex-1">
-                  Cancel
+                <Button
+                  type="button"
+                  variant={newGroupType === "public" ? "default" : "outline"}
+                  aria-pressed={newGroupType === "public"}
+                  onClick={() => setNewGroupType("public")}
+                  className="flex-1"
+                >
+                  <Globe className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Public
                 </Button>
-                <Button onClick={handleCreateGroup} className="flex-1">
-                  Create Group
+                <Button
+                  type="button"
+                  variant={newGroupType === "private" ? "default" : "outline"}
+                  aria-pressed={newGroupType === "private"}
+                  onClick={() => setNewGroupType("private")}
+                  className="flex-1"
+                >
+                  <Lock className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Private
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </fieldset>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowCreateGroup(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" className="flex-1" disabled={!newGroupName.trim()}>
+                Create Group
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
 export default function CommunityPage() {
-  return (
-    <ChatProvider>
-      <CommunityContent />
-    </ChatProvider>
-  )
+  return <CommunityContent />
 }

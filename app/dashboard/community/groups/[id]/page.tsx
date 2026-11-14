@@ -34,10 +34,12 @@ import {
   FileText,
 } from "lucide-react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import { useState } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
-export default function GroupManagementPage({ params }: { params: { id: string } }) {
+export default function GroupManagementPage() {
+  const params = useParams<{ id: string }>()
   const [searchTerm, setSearchTerm] = useState("")
   const [groupSettings, setGroupSettings] = useState({
     name: "Frontend Developers",
@@ -181,14 +183,14 @@ export default function GroupManagementPage({ params }: { params: { id: string }
       case "admin":
         return (
           <Badge className="bg-red-100 text-red-800">
-            <Crown className="h-3 w-3 mr-1" />
+            <Crown className="mr-1 h-3 w-3" />
             Admin
           </Badge>
         )
       case "moderator":
         return (
           <Badge className="bg-blue-100 text-blue-800">
-            <Shield className="h-3 w-3 mr-1" />
+            <Shield className="mr-1 h-3 w-3" />
             Moderator
           </Badge>
         )
@@ -208,20 +210,20 @@ export default function GroupManagementPage({ params }: { params: { id: string }
     }
   }
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = <K extends keyof typeof groupSettings>(key: K, value: (typeof groupSettings)[K]) => {
     setGroupSettings((prev) => ({ ...prev, [key]: value }))
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button variant="ghost" size="icon" asChild aria-label="Go back">
           <Link href="/dashboard/community">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">{group.name}</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">{group.name}</h1>
           <p className="text-muted-foreground">Group Management & Settings</p>
         </div>
         <div className="flex gap-2">
@@ -237,7 +239,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
       </div>
 
       {/* Group Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
@@ -254,7 +256,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Online Now</CardTitle>
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <div className="h-2 w-2 rounded-full bg-green-500"></div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{group.onlineCount}</div>
@@ -292,7 +294,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
       </div>
 
       <Tabs defaultValue="members" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="flex h-auto w-full flex-wrap justify-start sm:grid sm:grid-cols-5">
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="settings">Settings</TabsTrigger>
           <TabsTrigger value="moderation">Moderation</TabsTrigger>
@@ -304,7 +306,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
           {/* Member Management */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle>Member Management</CardTitle>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
@@ -319,9 +321,9 @@ export default function GroupManagementPage({ params }: { params: { id: string }
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4 mb-6">
+              <div className="mb-6 flex items-center gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                   <Input
                     placeholder="Search members..."
                     value={searchTerm}
@@ -337,7 +339,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
 
               <div className="space-y-4">
                 {filteredMembers.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={member.id} className="flex items-center justify-between rounded-lg border p-4">
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         <Avatar className="h-12 w-12">
@@ -345,11 +347,11 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                           <AvatarFallback>{member.avatar}</AvatarFallback>
                         </Avatar>
                         <div
-                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusColor(member.status)}`}
+                          className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-white ${getStatusColor(member.status)}`}
                         ></div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <p className="font-medium">{member.name}</p>
                           {getRoleBadge(member.role)}
                         </div>
@@ -362,29 +364,29 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" aria-label="More options">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <MessageSquare className="h-4 w-4 mr-2" />
+                          <MessageSquare className="mr-2 h-4 w-4" />
                           Send Message
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Shield className="h-4 w-4 mr-2" />
+                          <Shield className="mr-2 h-4 w-4" />
                           Make Moderator
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Crown className="h-4 w-4 mr-2" />
+                          <Crown className="mr-2 h-4 w-4" />
                           Make Admin
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <BellOff className="h-4 w-4 mr-2" />
+                          <BellOff className="mr-2 h-4 w-4" />
                           Mute Member
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-red-600">
-                          <UserMinus className="h-4 w-4 mr-2" />
+                          <UserMinus className="mr-2 h-4 w-4" />
                           Remove Member
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -451,7 +453,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
               <CardDescription>Control what members can do in this group</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">Allow member invites</p>
                   <p className="text-sm text-muted-foreground">Let members invite others to the group</p>
@@ -461,7 +463,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                   onCheckedChange={(checked) => handleSettingChange("allowMemberInvites", checked)}
                 />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">Require approval for new members</p>
                   <p className="text-sm text-muted-foreground">Admins must approve new member requests</p>
@@ -471,7 +473,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                   onCheckedChange={(checked) => handleSettingChange("requireApproval", checked)}
                 />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">Allow file uploads</p>
                   <p className="text-sm text-muted-foreground">Members can upload files and images</p>
@@ -481,7 +483,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                   onCheckedChange={(checked) => handleSettingChange("allowFileUploads", checked)}
                 />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">Allow external links</p>
                   <p className="text-sm text-muted-foreground">Members can share external links</p>
@@ -500,7 +502,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
               <CardDescription>Configure automatic moderation features</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">Slow mode</p>
                   <p className="text-sm text-muted-foreground">Limit how often members can send messages</p>
@@ -523,7 +525,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                   />
                 </div>
               )}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="font-medium">Allow @everyone mentions</p>
                   <p className="text-sm text-muted-foreground">Members can mention all group members</p>
@@ -541,7 +543,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
           {/* Pinned Messages */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle>Pinned Messages</CardTitle>
                 <Button size="sm" className="gap-2">
                   <Pin className="h-4 w-4" />
@@ -552,9 +554,9 @@ export default function GroupManagementPage({ params }: { params: { id: string }
             <CardContent>
               <div className="space-y-4">
                 {pinnedMessages.map((message) => (
-                  <div key={message.id} className="flex items-start justify-between p-4 border rounded-lg">
+                  <div key={message.id} className="flex items-start justify-between rounded-lg border p-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="mb-2 flex items-center gap-2">
                         <Badge variant={message.type === "announcement" ? "default" : "secondary"}>
                           {message.type}
                         </Badge>
@@ -566,21 +568,21 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" aria-label="More options">
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <Edit className="h-4 w-4 mr-2" />
+                          <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <Copy className="h-4 w-4 mr-2" />
+                          <Copy className="mr-2 h-4 w-4" />
                           Copy Link
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-red-600">
-                          <Trash className="h-4 w-4 mr-2" />
+                          <Trash className="mr-2 h-4 w-4" />
                           Unpin
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -622,14 +624,14 @@ export default function GroupManagementPage({ params }: { params: { id: string }
 
         <TabsContent value="analytics" className="space-y-6">
           {/* Group Analytics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Member Growth</CardTitle>
                 <CardDescription>New members over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="flex h-64 items-center justify-center text-muted-foreground">
                   Member growth chart would go here
                 </div>
               </CardContent>
@@ -641,7 +643,7 @@ export default function GroupManagementPage({ params }: { params: { id: string }
                 <CardDescription>Messages sent per day</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="flex h-64 items-center justify-center text-muted-foreground">
                   Message activity chart would go here
                 </div>
               </CardContent>
@@ -655,9 +657,9 @@ export default function GroupManagementPage({ params }: { params: { id: string }
               <CardContent>
                 <div className="space-y-4">
                   {members.slice(0, 5).map((member, index) => (
-                    <div key={member.id} className="flex items-center justify-between">
+                    <div key={member.id} className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium w-4">#{index + 1}</span>
+                        <span className="w-4 text-sm font-medium">#{index + 1}</span>
                         <Avatar className="h-8 w-8">
                           <AvatarImage src="/placeholder.svg?height=32&width=32" />
                           <AvatarFallback className="text-xs">{member.avatar}</AvatarFallback>
@@ -710,8 +712,8 @@ export default function GroupManagementPage({ params }: { params: { id: string }
             <CardContent>
               <div className="space-y-4">
                 {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4 p-3 border rounded-lg">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div key={activity.id} className="flex items-center space-x-4 rounded-lg border p-3">
+                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
                     <div className="flex-1">
                       <p className="text-sm">
                         {activity.type === "member_joined" && (
