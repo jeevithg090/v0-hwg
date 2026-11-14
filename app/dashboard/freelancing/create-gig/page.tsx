@@ -16,10 +16,20 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/lib/user-context"
+import { RequireHost } from "@/components/auth-guard"
+import { toast } from "sonner"
 
 export default function CreateGigPage() {
+  return (
+    <RequireHost fallback="/dashboard/freelancing">
+      <CreateGigForm />
+    </RequireHost>
+  )
+}
+
+function CreateGigForm() {
   const router = useRouter()
-  const { user, isClient, isStartup } = useUser()
+  const { isStartup } = useUser()
 
   const [skills, setSkills] = useState<string[]>([])
   const [newSkill, setNewSkill] = useState("")
@@ -37,12 +47,6 @@ export default function CreateGigPage() {
     requirements: "",
     deliverables: "",
   })
-
-  // Redirect if not authorized
-  if (!isClient && !isStartup) {
-    router.push("/dashboard/freelancing")
-    return null
-  }
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -66,20 +70,23 @@ export default function CreateGigPage() {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false)
-      router.push("/dashboard/freelancing?tab=my-gigs")
-    }, 2000)
+      toast.success("Project posted")
+      router.push("/dashboard/freelancing?tab=my-projects")
+    }, 800)
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button variant="ghost" size="icon" asChild aria-label="Go back">
           <Link href="/dashboard/freelancing">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">{isStartup ? "Post Startup Project" : "Create New Project"}</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">
+            {isStartup ? "Post Startup Project" : "Create New Project"}
+          </h1>
           <p className="text-muted-foreground">
             {isStartup ? "Find talented developers for your startup" : "Post a project and find the perfect freelancer"}
           </p>
@@ -87,9 +94,9 @@ export default function CreateGigPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6 lg:col-span-2">
             {/* Basic Information */}
             <Card>
               <CardHeader>
@@ -148,12 +155,12 @@ export default function CreateGigPage() {
                       onChange={(e) => setNewSkill(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
                     />
-                    <Button type="button" onClick={addSkill} size="icon">
+                    <Button type="button" onClick={addSkill} size="icon" aria-label="Add">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   {skills.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {skills.map((skill) => (
                         <Badge key={skill} variant="secondary" className="gap-1">
                           {skill}
@@ -163,6 +170,7 @@ export default function CreateGigPage() {
                             size="icon"
                             className="h-4 w-4 p-0 hover:bg-transparent"
                             onClick={() => removeSkill(skill)}
+                            aria-label={`Remove ${skill}`}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -181,7 +189,7 @@ export default function CreateGigPage() {
                 <CardDescription>Set your project budget and expected timeline</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Budget Type</Label>
                     <Select
@@ -201,7 +209,7 @@ export default function CreateGigPage() {
                   <div className="space-y-2">
                     <Label htmlFor="budget">Budget ({formData.budgetType === "hourly" ? "per hour" : "total"}) *</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                       <Input
                         id="budget"
                         type="number"
@@ -215,7 +223,7 @@ export default function CreateGigPage() {
                   </div>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="duration">Project Duration *</Label>
                     <Select value={formData.duration} onValueChange={(value) => handleInputChange("duration", value)}>
@@ -272,7 +280,7 @@ export default function CreateGigPage() {
                   <div className="space-y-2">
                     <Label htmlFor="location">Location</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                       <Input
                         id="location"
                         placeholder="e.g., San Francisco, CA"
@@ -318,8 +326,8 @@ export default function CreateGigPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h3 className="font-semibold text-lg">{formData.title || "Project Title"}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h3 className="text-lg font-semibold">{formData.title || "Project Title"}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {formData.description
                       ? formData.description.substring(0, 100) + "..."
                       : "Project description will appear here..."}
@@ -354,7 +362,7 @@ export default function CreateGigPage() {
                   <>
                     <Separator />
                     <div>
-                      <p className="text-sm font-medium mb-2">Required Skills:</p>
+                      <p className="mb-2 text-sm font-medium">Required Skills:</p>
                       <div className="flex flex-wrap gap-1">
                         {skills.map((skill) => (
                           <Badge key={skill} variant="secondary" className="text-xs">
@@ -374,19 +382,19 @@ export default function CreateGigPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-green-500"></div>
                   <p>Write a clear, detailed description</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
                   <p>Set a realistic budget and timeline</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-purple-500"></div>
                   <p>Include specific skill requirements</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                  <div className="mt-2 h-2 w-2 rounded-full bg-orange-500"></div>
                   <p>Respond quickly to proposals</p>
                 </div>
               </CardContent>
@@ -395,7 +403,7 @@ export default function CreateGigPage() {
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex justify-end space-x-4 pt-6 border-t">
+        <div className="flex justify-end space-x-4 border-t pt-6">
           <Button type="button" variant="outline" asChild>
             <Link href="/dashboard/freelancing">Cancel</Link>
           </Button>

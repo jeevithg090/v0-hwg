@@ -14,9 +14,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, DollarSign, Calendar, Clock, Star, Paperclip, Send } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
+import { toast } from "sonner"
 
-export default function ApplyToGigPage({ params }: { params: { id: string } }) {
+export default function ApplyToGigPage() {
+  const params = useParams<{ id: string }>()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [proposal, setProposal] = useState({
@@ -59,25 +61,26 @@ export default function ApplyToGigPage({ params }: { params: { id: string } }) {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false)
-      router.push("/dashboard/freelancing?tab=proposals")
-    }, 2000)
+      toast.success("Proposal submitted")
+      router.push("/dashboard/freelancing?tab=my-proposals")
+    }, 800)
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button variant="ghost" size="icon" asChild aria-label="Go back">
           <Link href="/dashboard/freelancing">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Submit Proposal</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">Submit Proposal</h1>
           <p className="text-muted-foreground">Apply for this gig with your best proposal</p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Proposal Form */}
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -100,11 +103,11 @@ export default function ApplyToGigPage({ params }: { params: { id: string } }) {
                   <p className="text-xs text-muted-foreground">{proposal.coverLetter.length}/1000 characters</p>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="proposedRate">Your Rate *</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                       <Input
                         id="proposedRate"
                         type="number"
@@ -167,13 +170,13 @@ export default function ApplyToGigPage({ params }: { params: { id: string } }) {
                 <CardDescription>Add relevant portfolio items or documents</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <Paperclip className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Drag and drop files here, or click to browse</p>
+                <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-6 text-center">
+                  <Paperclip className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
+                  <p className="mb-2 text-sm text-muted-foreground">Drag and drop files here, or click to browse</p>
                   <Button variant="outline" size="sm">
                     Choose Files
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-2">Supported formats: PDF, DOC, PNG, JPG (Max 10MB)</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Supported formats: PDF, DOC, PNG, JPG (Max 10MB)</p>
                 </div>
               </CardContent>
             </Card>
@@ -226,7 +229,7 @@ export default function ApplyToGigPage({ params }: { params: { id: string } }) {
               <Separator />
 
               <div>
-                <p className="text-sm font-medium mb-2">Required Skills:</p>
+                <p className="mb-2 text-sm font-medium">Required Skills:</p>
                 <div className="flex flex-wrap gap-1">
                   {gig.skills.map((skill) => (
                     <Badge key={skill} variant="secondary" className="text-xs">
@@ -280,19 +283,19 @@ export default function ApplyToGigPage({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                <div className="mt-2 h-2 w-2 rounded-full bg-green-500"></div>
                 <p>Personalize your proposal to the specific project</p>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
                 <p>Highlight relevant experience and skills</p>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+                <div className="mt-2 h-2 w-2 rounded-full bg-purple-500"></div>
                 <p>Ask thoughtful questions about the project</p>
               </div>
               <div className="flex items-start gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
+                <div className="mt-2 h-2 w-2 rounded-full bg-orange-500"></div>
                 <p>Include portfolio samples if relevant</p>
               </div>
             </CardContent>
