@@ -15,7 +15,7 @@ import {
   Video,
   Plus,
   Search,
-  Filter,
+  FilterX,
   Share,
   Bookmark,
   ExternalLink,
@@ -32,6 +32,7 @@ import {
 import Link from "next/link"
 import { useUser } from "@/lib/user-context"
 import { useTabParam } from "@/hooks/use-tab-param"
+import { filterEvents, type EventFilters, type PriceFilter } from "@/lib/events"
 
 const EVENT_TABS = ["discover", "registered", "hosting", "analytics", "saved", "calendar"] as const
 import { EventRegistrationModal, type RegistrableEvent } from "@/components/event-registration-modal"
@@ -247,6 +248,18 @@ export default function EventsPage() {
 
   const { isClient, isFreelancer, isStartup } = useUser()
   const [tab, setTab] = useTabParam("discover", EVENT_TABS)
+  const [filters, setFilters] = useState<Required<EventFilters>>({
+    search: "",
+    type: "all",
+    location: "all",
+    price: "all",
+  })
+  const updateFilter = <K extends keyof EventFilters>(key: K, value: Required<EventFilters>[K]) =>
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  const visibleFeatured = filterEvents(featuredEvents, filters)
+  const visibleUpcoming = filterEvents(upcomingEvents, filters)
+  const hasActiveFilters =
+    filters.search !== "" || filters.type !== "all" || filters.location !== "all" || filters.price !== "all"
 
   return (
     <div className="space-y-6">
@@ -283,13 +296,19 @@ export default function EventsPage() {
           {/* Search and Filters */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex flex-col gap-4 md:flex-row">
+              <div className="flex flex-col gap-4 lg:flex-row">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
-                  <Input placeholder="Search events..." className="pl-10" />
+                  <Input
+                    placeholder="Search events..."
+                    aria-label="Search events"
+                    className="pl-10"
+                    value={filters.search}
+                    onChange={(e) => updateFilter("search", e.target.value)}
+                  />
                 </div>
-                <Select>
-                  <SelectTrigger className="w-full md:w-48">
+                <Select value={filters.type} onValueChange={(value) => updateFilter("type", value)}>
+                  <SelectTrigger className="w-full lg:w-44" aria-label="Event type">
                     <SelectValue placeholder="Event Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -303,8 +322,8 @@ export default function EventsPage() {
                     <SelectItem value="networking">🌐 Networking</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select>
-                  <SelectTrigger className="w-full md:w-48">
+                <Select value={filters.location} onValueChange={(value) => updateFilter("location", value)}>
+                  <SelectTrigger className="w-full lg:w-44" aria-label="Location">
                     <SelectValue placeholder="Location" />
                   </SelectTrigger>
                   <SelectContent>
@@ -316,8 +335,8 @@ export default function EventsPage() {
                     <SelectItem value="berlin">Berlin</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select>
-                  <SelectTrigger className="w-full md:w-48">
+                <Select value={filters.price} onValueChange={(value) => updateFilter("price", value as PriceFilter)}>
+                  <SelectTrigger className="w-full lg:w-44" aria-label="Price">
                     <SelectValue placeholder="Price" />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,23 +345,36 @@ export default function EventsPage() {
                     <SelectItem value="paid">Paid</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  More Filters
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  disabled={!hasActiveFilters}
+                  onClick={() => setFilters({ search: "", type: "all", location: "all", price: "all" })}
+                >
+                  <FilterX className="h-4 w-4" aria-hidden="true" />
+                  Clear
                 </Button>
               </div>
             </CardContent>
           </Card>
 
+          {visibleFeatured.length === 0 && visibleUpcoming.length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground" role="status">
+                No events match your filters. Try a different search, or clear the filters.
+              </CardContent>
+            </Card>
+          )}
+
           {/* Featured Events */}
-          <div>
+          <div className={visibleFeatured.length === 0 ? "hidden" : undefined}>
             <h2 className="mb-4 text-xl font-semibold">Featured Events</h2>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {featuredEvents.map((event) => (
+              {visibleFeatured.map((event) => (
                 <Card key={event.id} className="overflow-hidden transition-shadow hover:shadow-lg">
                   <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
                     <div className="absolute left-4 top-4">
-                      <Badge className="bg-white text-black">Featured</Badge>
+                      <Badge className="bg-white text-gray-900 hover:bg-white">Featured</Badge>
                     </div>
                     <div className="absolute right-4 top-4">
                       <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" aria-label="Save">
@@ -404,10 +436,10 @@ export default function EventsPage() {
           </div>
 
           {/* Upcoming Events */}
-          <div>
+          <div className={visibleUpcoming.length === 0 ? "hidden" : undefined}>
             <h2 className="mb-4 text-xl font-semibold">Upcoming Events</h2>
             <div className="space-y-4">
-              {upcomingEvents.map((event) => (
+              {visibleUpcoming.map((event) => (
                 <Card key={event.id} className="transition-shadow hover:shadow-md">
                   <CardContent className="p-6">
                     <div className="flex flex-wrap items-center justify-between gap-2">
